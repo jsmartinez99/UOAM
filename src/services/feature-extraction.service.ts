@@ -1,15 +1,17 @@
 import { Dimensions6D } from '../domain/arranger-profile';
 
 export class FeatureExtractionService {
-  extract(_rawFeatures: Record<string, unknown>): Dimensions6D {
+  extract(rawFeatures: Record<string, unknown>): Dimensions6D {
     // TODO: Implement actual feature extraction from rawFeatures
-    return {
-      organology: ['Extracted Instrument'],
-      harmony: ['Extracted Harmony'],
-      counterpoint: ['Extracted Counterpoint'],
-      texture: ['Extracted Texture'],
-      rhythm: ['Extracted Rhythm'],
-      taste: ['Extracted Taste'],
+    // For now, return default dimensions
+    const defaultDimensions: Dimensions6D = {
+      organology: rawFeatures.organology as string[] || ['Extracted Instrument'],
+      harmony: rawFeatures.harmony as string[] || ['Extracted Harmony'],
+      counterpoint: rawFeatures.counterpoint as string[] || ['Extracted Counterpoint'],
+      texture: rawFeatures.texture as string[] || ['Extracted Texture'],
+      rhythm: rawFeatures.rhythm as string[] || ['Extracted Rhythm'],
+      taste: rawFeatures.taste as string[] || ['Extracted Taste'],
     };
+    return defaultDimensions;
   }
 }
