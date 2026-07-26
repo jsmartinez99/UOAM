@@ -1,0 +1,292 @@
+openapi: 3.0.0
+info:
+  title: UOAM Arranger Ecosystem API
+  description: API for the Hybrid Musical Arrangements Ecosystem
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+paths:
+  /arrangers:
+    get:
+      summary: List all arranger profiles
+      description: Retrieve a list of all arranger profiles in the catalog
+      responses:
+        '200':
+          description: A list of arranger profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArrangerProfile'
+    post:
+      summary: Create a new arranger profile
+      description: Add a new arranger profile to the catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArrangerProfileInput'
+      responses:
+        '201':
+          description: Profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrangerProfile'
+  /arrangers/{id}:
+    get:
+      summary: Get an arranger profile
+      description: Retrieve details of a specific arranger profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Arranger profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrangerProfile'
+    put:
+      summary: Update an arranger profile
+      description: Update details of an existing arranger profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArrangerProfileInput'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrangerProfile'
+  /hybridize:
+    post:
+      summary: Create hybrid arrangement
+      description: Combine multiple arranger profiles to create a hybrid arrangement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profileIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Hybrid arrangement created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HybridResult'
+  /search:
+    post:
+      summary: Search similar arrangements
+      description: Find arrangements similar to a given vector representation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vector:
+                  type: array
+                  items:
+                    type: number
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResult'
+  /analyze:
+    post:
+      summary: Generate arrangement analysis
+      description: Generate a detailed analysis of an arrangement using LLM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context:
+                  $ref: '#/components/schemas/RAGContext'
+      responses:
+        '200':
+          description: Analysis report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisReport'
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Register a new user with the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [STANDARD, ARRANGER, ADMIN]
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user and return a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+components:
+  schemas:
+    ArrangerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        dimensions:
+          $ref: '#/components/schemas/Dimensions6D'
+    ArrangerProfileInput:
+      type: object
+      required:
+        - name
+        - dimensions
+      properties:
+        name:
+          type: string
+        dimensions:
+          $ref: '#/components/schemas/Dimensions6D'
+    Dimensions6D:
+      type: object
+      properties:
+        organology:
+          type: array
+          items:
+            type: string
+        harmony:
+          type: array
+          items:
+            type: string
+        counterpoint:
+          type: array
+          items:
+            type: string
+        texture:
+          type: array
+          items:
+            type: string
+        rhythm:
+          type: array
+          items:
+            type: string
+        taste:
+          type: array
+          items:
+            type: string
+    HybridResult:
+      type: object
+      properties:
+        mergedProfile:
+          $ref: '#/components/schemas/Dimensions6D'
+        resolutionLog:
+          type: array
+          items:
+            type: string
+    SearchResult:
+      type: object
+      properties:
+        arranger:
+          type: string
+        score:
+          type: number
+        matchedDimension:
+          type: string
+    RAGContext:
+      type: object
+      properties:
+        arranger:
+          type: string
+        confidence:
+          type: number
+        matchedDimension:
+          type: string
+    AnalysisReport:
+      type: object
+      properties:
+        content:
+          type: string
+        context:
+          $ref: '#/components/schemas/RAGContext'
+        generatedAt:
+          type: string
+          format: date-time
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [STANDARD, ARRANGER, ADMIN]
+        createdAt:
+          type: string
+          format: date-time

@@ -1,0 +1,38 @@
+name: Arranger Ecosystem CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Static Analysis (Lint & Typecheck)
+        run: |
+          npm run lint
+          npm run typecheck
+
+      - name: Run Domain & Integration Tests (TDD Enforcement)
+        run: npm run test -- --coverage
+        env:
+          QDRANT_URL: http://localhost:6333
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+
+      - name: Build Docker Image
+        if: github.ref == 'refs/heads/main'
+        run: docker build -t arranger-core:latest .
