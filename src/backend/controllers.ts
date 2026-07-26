@@ -19,7 +19,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: { id: string; email: string; role: string };
-      file?: { buffer: Buffer; mimetype: string; originalname: string };
+      musicFile?: { buffer: Buffer; mimetype: string; originalname: string };
     }
   }
 }
@@ -248,13 +248,13 @@ export function createArrangerController(
 
   // ── Ingesta de archivos musicales ──
 
-   async function uploadArrangement(req: Request, res: Response): Promise<Response> {
-     try {
-       if (!req.file) {
-         return res.status(400).json({ error: 'No se proporcionó archivo' });
-       }
+    async function uploadArrangement(req: Request, res: Response): Promise<Response> {
+      try {
+        if (!req.musicFile) {
+          return res.status(400).json({ error: 'No se proporcionó archivo' });
+        }
 
-       const result = await MusicFileAnalyzer.analyze(req.file.buffer, req.file.mimetype, req.file.originalname);
+        const result = await MusicFileAnalyzer.analyze(req.musicFile.buffer, req.musicFile.mimetype, req.musicFile.originalname);
 
        // Crear perfil con nombre sugerido
        const suggestedName = MusicFileAnalyzer.suggestName(result.dimensions, result.metadata);

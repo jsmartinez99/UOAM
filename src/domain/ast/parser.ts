@@ -8,7 +8,14 @@ export class ASTParser {
       return new NoteNode(nodeData.pitch as string, nodeData.duration as number);
     }
     if (nodeData.type === 'ChordNode') {
-      return new ChordNode((nodeData.notes as unknown[]).map((n: unknown) => this.parse(n)));
+      const notes = (nodeData.notes as unknown[]).map((n: unknown) => {
+        const parsed = this.parse(n);
+        if (!(parsed instanceof NoteNode)) {
+          throw new Error('ChordNode children must be NoteNode');
+        }
+        return parsed;
+      });
+      return new ChordNode(notes);
     }
     if (nodeData.type === 'ContainerNode') {
       return new ContainerNode((nodeData.children as unknown[]).map((c: unknown) => this.parse(c)));
