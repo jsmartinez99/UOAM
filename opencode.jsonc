@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "semgrep": {
+      "type": "local",
+      "command": ["semgrep", "mcp"],
+      "enabled": true,
+      "environment": {
+        "SEMGREP_APP_TOKEN": "ac25cad6779442954556efdd436eddd24e2b8fba6174ceb3324bf09cc98f903b"
+      }
+    }
+  }
+}

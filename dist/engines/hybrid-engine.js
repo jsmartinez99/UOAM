@@ -9,104 +9,52 @@
  *   con instrumentos agudos), el motor aplica transposición de octava
  *   o sustitución de instrumentos basándose en formantes armónicos.
  */
-// ─── Reglas de Resolución de Conflictos ──────────────────────────
-/**
- * Regla: Flute + Low Close-Voicing
- * La flauta no alcanza registros graves (C2-C3).
- * Resolución: transponer la textura +1 octava a Medium (C4-C5).
- */
-const fluteLowVoicingRule = {
-    detect: (input) => input.organology.includes('Flute') &&
-        input.texture.some((t) => t.includes('Low Close-Voicing')),
-    resolve: (input) => {
-        const resolvedTexture = input.texture.map((t) => t.includes('Low Close-Voicing') ? 'Medium Close-Voicing (C4-C5)' : t);
-        return {
-            resolvedTexture,
-            log: 'Conflict resolved: Flute transposed +1 Octave',
-        };
-    },
-};
-/**
- * Regla: Piccolo + Low Register Textures
- * El piccolo suena una octava por encima; registros bajos son imposibles.
- * Resolución: transponer a High Register.
- */
-const piccoloLowRegisterRule = {
-    detect: (input) => input.organology.includes('Piccolo') &&
-        input.texture.some((t) => t.includes('Low')),
-    resolve: (input) => {
-        const resolvedTexture = input.texture.map((t) => t.includes('Low') ? t.replace('Low', 'High') : t);
-        return {
-            resolvedTexture,
-            log: 'Conflict resolved: Piccolo texture shifted to High register',
-        };
-    },
-};
-/**
- * Regla: Tuba + High Close-Voicing
- * La tuba no alcanza registros agudos (C5+).
- * Resolución: transponer la textura -1 octava a Low.
- */
-const tubaHighVoicingRule = {
-    detect: (input) => input.organology.includes('Tuba') &&
-        input.texture.some((t) => t.includes('High Close-Voicing')),
-    resolve: (input) => {
-        const resolvedTexture = input.texture.map((t) => t.includes('High Close-Voicing') ? 'Low Close-Voicing (C2-C3)' : t);
-        return {
-            resolvedTexture,
-            log: 'Conflict resolved: Tuba transposed -1 Octave to Low register',
-        };
-    },
-};
-// ─── Registro de reglas por defecto ──────────────────────────────
-const DEFAULT_CONFLICT_RULES = [
-    fluteLowVoicingRule,
-    piccoloLowRegisterRule,
-    tubaHighVoicingRule,
-];
-// ─── Motor Híbrido ───────────────────────────────────────────────
+import { RuleEngine } from '../domain/ast/rule-engine.js';
+import { MusicASTBuilder } from '../domain/ast/builder.js';
+import { ContainerNode, NoteNode } from '../domain/ast/nodes.js';
+import { CompositeConflictRule } from '../domain/ast/rules/composite-conflict.js';
+import { CounterpointRule } from '../domain/ast/rules/counterpoint.js';
+import { RhythmRule } from '../domain/ast/rules/rhythm.js';
 export class HybridEngine {
-    rules;
-    constructor(customRules) {
-        this.rules = customRules ?? DEFAULT_CONFLICT_RULES;
+    ruleEngine;
+    astBuilder;
+    constructor() {
+        const rules = new Map([
+            ['ContainerNode', new CompositeConflictRule()],
+            ['CounterpointNode', new CounterpointRule()],
+            ['RhythmNode', new RhythmRule()],
+        ]);
+        this.ruleEngine = new RuleEngine(rules);
+        this.astBuilder = new MusicASTBuilder();
     }
-    /**
-     * Fusiona features de organología y textura,
-     * resolviendo automáticamente los conflictos detectados.
-     */
     merge(features) {
+        const ast = this.astBuilder.buildFromMergeInput(features);
+        const resolvedAst = this.ruleEngine.apply(ast);
         const log = [];
-        let resolvedTexture = [...features.texture];
-        for (const rule of this.rules) {
-            if (rule.detect({ organology: features.organology, texture: resolvedTexture })) {
-                const result = rule.resolve({
-                    organology: features.organology,
-                    texture: resolvedTexture,
-                });
-                resolvedTexture = result.resolvedTexture;
-                log.push(result.log);
-            }
+        let resolvedOrganology = features.organology;
+        let resolvedTexture = features.texture;
+        // Extraer textura resuelta del AST
+        if (resolvedAst instanceof ContainerNode && resolvedAst.children.length === 2) {
+            resolvedOrganology = resolvedAst.children[0] instanceof NoteNode ? resolvedAst.children[0].pitch.split(',') : features.organology;
+            resolvedTexture = resolvedAst.children[1] instanceof NoteNode ? resolvedAst.children[1].pitch.split(',') : features.texture;
+        }
+        // Si hubo cambios, registramos el log
+        if (JSON.stringify(features.texture) !== JSON.stringify(resolvedTexture)) {
+            log.push('Conflict resolved: AST-based transformation applied');
         }
         return {
             resolvedFeatures: {
-                organology: [...features.organology],
+                organology: resolvedOrganology,
                 texture: resolvedTexture,
             },
             resolutionLog: log,
         };
     }
-    /**
-     * Fusiona dos firmas 6D completas, aplicando resolución
-     * de conflictos en organología/textura y concatenando
-     * el resto de dimensiones.
-     */
     mergeFullSignatures(signatureA, signatureB) {
-        // Combinar organología y textura con resolución de conflictos
         const mergeResult = this.merge({
             organology: [...new Set([...signatureA.organology, ...signatureB.organology])],
             texture: [...new Set([...signatureA.texture, ...signatureB.texture])],
         });
-        // Para las demás dimensiones, unión sin duplicados
         const merged = {
             organology: mergeResult.resolvedFeatures.organology,
             harmony: [...new Set([...signatureA.harmony, ...signatureB.harmony])],

@@ -39,11 +39,11 @@ const ResultBox = styled(Box)(({ theme }) => ({
 // ─── Componente principal ─────────────────────────────────────────
 
 export default function HybridizationTool() {
-  const [selectedProfiles, setSelectedProfiles] = useState([]);
-  const [availableProfiles, setAvailableProfiles] = useState([]);
+  const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
+  const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -60,7 +60,7 @@ export default function HybridizationTool() {
     fetchProfiles();
   }, []);
 
-  const handleProfileSelect = (event) => {
+  const handleProfileSelect = (event: any) => {
     const {
       target: { value },
     } = event;
@@ -77,6 +77,7 @@ export default function HybridizationTool() {
 
     try {
       setLoading(true);
+      setError(null);
       const hybridResult = await apiService.hybridizeProfiles(selectedProfiles);
       setResult(hybridResult);
     } catch (err) {
@@ -194,13 +195,13 @@ export default function HybridizationTool() {
             Características resueltas:
           </Typography>
           <Box sx={{ mb: 3 }}> 
-            {Object.entries(result.mergedProfile).map(([dimension, values]) => (
+            {Object.entries(result.mergedProfile).map(([dimension, values]: [string, any]) => (
               <Box key={dimension} sx={{ mb: 2 }}> 
                 <Typography variant="subtitle2" gutterBottom>
                   {dimension}:
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}> 
-                  {values.map((value, index) => (
+                  {values.map((value: string, index: number) => (
                     <Chip key={index} label={value} size="small" />
                   ))}
                 </Box>
@@ -214,7 +215,7 @@ export default function HybridizationTool() {
                 Log de resolución:
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}> 
-                {result.resolutionLog.map((log, index) => (
+                {result.resolutionLog.map((log: string, index: number) => (
                   <Typography key={index} variant="body2">
                     • {log}
                   </Typography>

@@ -9,7 +9,8 @@
  * Patrón: Domain Service con validaciones robustas.
  * En producción el hash iría con bcrypt/Argon2.
  */
-import { randomUUID } from 'crypto';
+import { AppDataSource } from '../infrastructure/database/data-source.js';
+import { UserEntity } from '../infrastructure/database/entities/user.entity.js';
 // ─── Errores de dominio ──────────────────────────────────────────
 export class InvalidEmailError extends Error {
     constructor(email) {
@@ -50,8 +51,6 @@ export class UserService {
     EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     MIN_PASSWORD_LENGTH = 8;
     PASSWORD_STRENGTH_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-    /** Almacén en memoria (en producción sería un repositorio inyectado) */
-    users = new Map();
     /**
      * Registra un nuevo usuario con rol STANDARD por defecto.
      *
@@ -62,17 +61,19 @@ export class UserService {
     async registerUser(email, pass, role = 'STANDARD') {
         this.validateEmail(email);
         this.validatePassword(pass);
-        this.checkDuplicate(email);
+        const userRepository = AppDataSource.getRepository(UserEntity);
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingUser = await userRepository.findOneBy({ email: normalizedEmail });
+        if (existingUser) {
+            throw new DuplicateEmailError(normalizedEmail);
+        }
         const hashedPassword = await this.hashPassword(pass);
-        const user = {
-            id: randomUUID(),
-            email: email.toLowerCase().trim(),
+        const user = userRepository.create({
+            email: normalizedEmail,
             role,
-            createdAt: new Date(),
             hashedPassword,
-        };
-        this.users.set(user.id, user);
-        // Devolvemos sin el hash
+        });
+        await userRepository.save(user);
         return {
             id: user.id,
             email: user.email,
@@ -98,19 +99,17 @@ export class UserService {
     /**
      * Busca un usuario por email.
      */
-    findByEmail(email) {
-        const normalized = email.toLowerCase().trim();
-        for (const user of this.users.values()) {
-            if (user.email === normalized) {
-                return {
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    createdAt: user.createdAt,
-                };
-            }
-        }
-        return undefined;
+    async findByEmail(email) {
+        const userRepository = AppDataSource.getRepository(UserEntity);
+        const user = await userRepository.findOneBy({ email: email.toLowerCase().trim() });
+        if (!user)
+            return undefined;
+        return {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            createdAt: user.createdAt,
+        };
     }
     // ── Validaciones privadas ──
     validateEmail(email) {
@@ -124,14 +123,6 @@ export class UserService {
         }
         if (!this.PASSWORD_STRENGTH_REGEX.test(pass)) {
             throw new WeakPasswordError('La contraseña debe contener al menos: una mayúscula, una minúscula, un número y un carácter especial.');
-        }
-    }
-    checkDuplicate(email) {
-        const normalized = email.toLowerCase().trim();
-        for (const user of this.users.values()) {
-            if (user.email === normalized) {
-                throw new DuplicateEmailError(normalized);
-            }
         }
     }
     async hashPassword(pass) {

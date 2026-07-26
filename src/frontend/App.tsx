@@ -7,8 +7,9 @@ import HomePage from './pages/HomePage';
 import ArrangerCatalog from './pages/ArrangerCatalog';
 import HybridizationTool from './pages/HybridizationTool';
 import AnalysisTool from './pages/AnalysisTool';
-import AuthProvider from './context/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
+import Login from './pages/Login';
+import { AuthProvider } from './context/AuthContext';
+import { PrivateRoute } from './components/PrivateRoute';
 
 // ─── Tema de Material UI ───────────────────────────────────────────
 
@@ -58,23 +59,12 @@ export default function App() {
           <Layout>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/catalog" element={<ArrangerCatalog />} />
-              <Route
-                path="/hybridize"
-                element={(
-                  <PrivateRoute requiredRole="ARRANGER">
-                    <HybridizationTool />
-                  </PrivateRoute>
-                )}
-              />
-              <Route
-                path="/analyze"
-                element={(
-                  <PrivateRoute requiredRole="ARRANGER">
-                    <AnalysisTool />
-                  </PrivateRoute>
-                )}
-              />
+              <Route element={<PrivateRoute />}>
+                <Route path="/hybridize" element={<HybridizationTool />} />
+                <Route path="/analyze" element={<AnalysisTool />} />
+              </Route>
             </Routes>
           </Layout>
         </Router>

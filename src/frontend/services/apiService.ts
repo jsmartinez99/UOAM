@@ -1,12 +1,12 @@
 import axios from 'axios';
-import { ArrangerProfile, Dimensions6D } from '../domain/arranger-profile';
-import { HybridResult, SearchResult, AnalysisReport } from '../types/api-types';
+import { ArrangerProfile, Dimensions6D } from '../../domain/arranger-profile';
+import { HybridResult, SearchResult, AnalysisReport } from '../../types/api-types';
 
 // ─── Configuración de Axios ─────────────────────────────────────────
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1',
-  timeout: 10000,
+  timeout: 30000, // Longer timeout for file uploads
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,6 +15,7 @@ const api = axios.create({
 // ─── Interceptores ─────────────────────────────────────────────────
 
 api.interceptors.request.use((config) => {
+  config.headers = config.headers || {};
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -26,7 +27,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Manejar token expirado
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
@@ -41,7 +41,7 @@ export const apiService = {
 
   async getArrangers(): Promise<ArrangerProfile[]> {
     const response = await api.get('/arrangers');
-    return response.data;
+    return response.data as ArrangerProfile[];
   },
 
   async createArranger(
@@ -49,21 +49,21 @@ export const apiService = {
     dimensions: Dimensions6D,
   ): Promise<ArrangerProfile> {
     const response = await api.post('/arrangers', { name, dimensions });
-    return response.data;
+    return response.data as ArrangerProfile;
   },
 
   // ── Hibridación ──
 
   async hybridizeProfiles(profileIds: string[]): Promise<HybridResult> {
     const response = await api.post('/hybridize', { profileIds });
-    return response.data;
+    return response.data as HybridResult;
   },
 
   // ── Búsqueda semántica ──
 
   async searchSimilar(vector: number[]): Promise<SearchResult[]> {
     const response = await api.post('/search', { vector });
-    return response.data;
+    return response.data as SearchResult[];
   },
 
   // ── Análisis LLM ──
@@ -76,7 +76,21 @@ export const apiService = {
     },
   ): Promise<AnalysisReport> {
     const response = await api.post('/analyze', { context });
-    return response.data;
+    return response.data as AnalysisReport;
+  },
+
+  // ── Subida de archivos ──
+
+  async uploadArrangement(file: File): Promise<ArrangerProfile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data as ArrangerProfile;
   },
 
   // ── Autenticación ──
@@ -84,14 +98,14 @@ export const apiService = {
   async register(
     email: string,
     password: string,
-    role: 'STANDARD' | 'ARRANGER' | 'ADMIN',
+    role: 'STANDARD' | 'ARRANGER' | 'ADMIN' = 'STANDARD',
   ): Promise<{ id: string; email: string; role: string }> {
     const response = await api.post('/auth/register', { email, password, role });
-    return response.data;
+    return response.data as any;
   },
 
-  async login(email: string, password: string): Promise<{ token: string }> {
+  async login(email: string, password: string): Promise<{ token: string; user: any }> {
     const response = await api.post('/auth/login', { email, password });
-    return response.data;
+    return response.data as any;
   },
 };

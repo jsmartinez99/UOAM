@@ -38,8 +38,6 @@ export declare class UserService {
     private readonly EMAIL_REGEX;
     private readonly MIN_PASSWORD_LENGTH;
     private readonly PASSWORD_STRENGTH_REGEX;
-    /** Almacén en memoria (en producción sería un repositorio inyectado) */
-    private readonly users;
     /**
      * Registra un nuevo usuario con rol STANDARD por defecto.
      *
@@ -57,10 +55,9 @@ export declare class UserService {
     /**
      * Busca un usuario por email.
      */
-    findByEmail(email: string): User | undefined;
+    findByEmail(email: string): Promise<User | undefined>;
     private validateEmail;
     private validatePassword;
-    private checkDuplicate;
     private hashPassword;
 }
 //# sourceMappingURL=user.service.d.ts.map

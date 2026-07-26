@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7
         with:
-          node-version: '18.x'
+          node-version: '22.x'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -26,6 +26,8 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
+          # Añadir validación de documentación si es necesario
+          # npm run validate-docs
 
       - name: Run Domain & Integration Tests (TDD Enforcement)
         run: npm run test -- --coverage

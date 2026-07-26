@@ -4,7 +4,7 @@
  * Ciclo: RED → GREEN → REFACTOR
  * Verifica registro, autorización RBAC y validaciones de seguridad.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import {
   UserService,
   InvalidEmailError,
@@ -12,14 +12,31 @@ import {
   UnauthorizedError,
   DuplicateEmailError,
 } from '../../src/services/user.service';
+import { AppDataSource } from '../../src/infrastructure/database/data-source';
+import { UserEntity } from '../../src/infrastructure/database/entities/user.entity';
 
 // ─── Suite ───────────────────────────────────────────────────────
 
 describe('UserService', () => {
   let service: UserService;
 
-  beforeEach(() => {
+  beforeAll(async () => {
+    // Solo inicializar si no está conectado para evitar errores en tests
+    if (!AppDataSource.isInitialized) {
+      await AppDataSource.initialize();
+    }
+  });
+
+  afterAll(async () => {
+    if (AppDataSource.isInitialized) {
+      await AppDataSource.destroy();
+    }
+  });
+
+  beforeEach(async () => {
     service = new UserService();
+    // Limpiar base de datos antes de cada test
+    await AppDataSource.getRepository(UserEntity).clear();
   });
 
   // ── Test original del spec (Fase Roja) ──
@@ -125,13 +142,13 @@ describe('UserService', () => {
   it('debe encontrar usuarios por email', async () => {
     await service.registerUser('findme@example.com', 'FindMe123!');
 
-    const found = service.findByEmail('findme@example.com');
+    const found = await service.findByEmail('findme@example.com');
     expect(found).toBeDefined();
     expect(found?.email).toBe('findme@example.com');
   });
 
-  it('debe devolver undefined para emails no registrados', () => {
-    expect(service.findByEmail('nonexistent@example.com')).toBeUndefined();
+  it('debe devolver undefined para emails no registrados', async () => {
+    expect(await service.findByEmail('nonexistent@example.com')).toBeUndefined();
   });
 
   // ── Autorización RBAC ──

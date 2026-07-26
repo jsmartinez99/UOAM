@@ -2,13 +2,14 @@ import axios from 'axios';
 // ─── Configuración de Axios ─────────────────────────────────────────
 const api = axios.create({
     baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1',
-    timeout: 10000,
+    timeout: 30000, // Longer timeout for file uploads
     headers: {
         'Content-Type': 'application/json',
     },
 });
 // ─── Interceptores ─────────────────────────────────────────────────
 api.interceptors.request.use((config) => {
+    config.headers = config.headers || {};
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -17,7 +18,6 @@ api.interceptors.request.use((config) => {
 });
 api.interceptors.response.use((response) => response, (error) => {
     if (error.response?.status === 401) {
-        // Manejar token expirado
         localStorage.removeItem('token');
         window.location.href = '/login';
     }
@@ -49,8 +49,19 @@ export const apiService = {
         const response = await api.post('/analyze', { context });
         return response.data;
     },
+    // ── Subida de archivos ──
+    async uploadArrangement(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    },
     // ── Autenticación ──
-    async register(email, password, role) {
+    async register(email, password, role = 'STANDARD') {
         const response = await api.post('/auth/register', { email, password, role });
         return response.data;
     },

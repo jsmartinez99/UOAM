@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: uoam_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/uoam_db
+      QDRANT_URL: http://qdrant:6333
+      JWT_SECRET: supersecretkey
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - qdrant
+
+volumes:
+  db_data:
+  qdrant_data:
