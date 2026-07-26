@@ -11,6 +11,7 @@ on:
     workflows: ["CI/CD - Node.js + Docker + Kubernetes"]
     types:
       - completed  # Se ejecuta después de que CI/CD termine
+  workflow_dispatch:
 
 jobs:
   trivy-scan:

@@ -7,6 +7,7 @@ on:
     branches: [ "main", "develop" ]
   schedule:
     - cron: '0 0 * * *'  # Todos los días a medianoche
+  workflow_dispatch:
 
 jobs:
   semgrep:
