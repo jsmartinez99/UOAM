@@ -3,7 +3,7 @@
  */
 
 export interface IngestorResult {
-  rawFeatures: Record<string, any>;
+  rawFeatures: Record<string, unknown>;
 }
 
 export interface SymbolicIngestor {

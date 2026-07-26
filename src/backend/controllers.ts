@@ -167,7 +167,7 @@ export function createArrangerController(
          });
        }
 
-       const profiles = profilesData.map((p: ArrangerProfileEntity) => new ArrangerProfile(p.name, p.dimensions as Dim6D, p.id));
+        const profiles = profilesData.map((p: ArrangerProfileEntity) => new ArrangerProfile(p.name, p.dimensions, p.id));
 
        const result = hybridEngine.mergeFullSignatures(
          profiles[0].dimensions,

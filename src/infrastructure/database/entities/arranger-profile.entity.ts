@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Dimensions6D } from '../../../domain/arranger-profile.js';
 
 @Entity('arranger_profiles')
 export class ArrangerProfileEntity {
@@ -9,5 +10,5 @@ export class ArrangerProfileEntity {
   name!: string;
 
   @Column('jsonb')
-  dimensions!: any;
+  dimensions!: Dimensions6D;
 }

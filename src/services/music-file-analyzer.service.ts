@@ -203,8 +203,8 @@ export class MusicFileAnalyzer {
   /**
    * Genera un nombre sugerido para el perfil basado en el análisis
    */
-  static suggestName(dimensions: Dimensions6D, metadata: Record<string, any>): string {
-    const baseName = metadata.filename?.replace(/\.[^.]+$/, '') || 'Unknown Arranger';
+   static suggestName(dimensions: Dimensions6D, metadata: Record<string, unknown>): string {
+    const baseName = (metadata.filename as string | undefined)?.replace(/\.[^.]+$/, '') || 'Unknown Arranger';
     const dominantDim = Object.entries(dimensions)
       .sort((a, b) => b[1].length - a[1].length)[0];
     
@@ -217,15 +217,15 @@ export class MusicFileAnalyzer {
   /**
    * Analiza un archivo y devuelve un ArrangerProfile completo
    */
-  async analyzeFile(buffer: Buffer, filename: string): Promise<{
-    profile: ArrangerProfile;
-    analysis: {
-      dimensions: Dimensions6D;
-      detectedFormat: string;
-      confidence: number;
-      metadata: Record<string, any>;
-    };
-  }> {
+   async analyzeFile(buffer: Buffer, filename: string): Promise<{
+     profile: ArrangerProfile;
+     analysis: {
+       dimensions: Dimensions6D;
+       detectedFormat: string;
+       confidence: number;
+       metadata: Record<string, unknown>;
+     };
+   }> {
     const mimeType = filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')
       ? 'application/xml'
       : filename.endsWith('.mid') || filename.endsWith('.midi')

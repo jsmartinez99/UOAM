@@ -12,6 +12,6 @@ export interface SearchResult {
 
 export interface AnalysisReport {
   content: string;
-  context: any;
+  context: Record<string, unknown>;
   generatedAt: Date;
 }

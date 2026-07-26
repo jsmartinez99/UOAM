@@ -7,7 +7,6 @@ import { config } from './config.js';
 import { QdrantAdapter } from './infrastructure/qdrant/qdrant-client.js';
 import { logger } from './infrastructure/logger.js';
 import type { LLMClient } from './ports/llm-client.port.js';
-import type { VectorDatabaseClient } from './ports/vector-database.port.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
