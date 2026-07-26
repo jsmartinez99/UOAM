@@ -182,23 +182,20 @@ export class MusicFileAnalyzer {
     let confidence = 0.5;
     const metadata: Record<string, any> = { filename };
 
-    if (mimeType.includes('xml') || filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')) {
-      detectedFormat = 'MusicXML';
-      const xmlContent = file.toString('utf-8');
-      dimensions = await analyzeMusicXML(xmlContent);
-      confidence = 0.8;
-      metadata.format = 'MusicXML';
-      metadata.size = file.length;
-    } else if (mimeType.includes('midi') || filename.endsWith('.mid') || filename.endsWith('.midi')) {
-      detectedFormat = 'MIDI';
-      dimensions = analyzeMIDI(file);
-      confidence = 0.6;
-      metadata.format = 'MIDI';
-      metadata.size = file.length;
-    } else {
-      dimensions = getDefaultDimensions();
-      confidence = 0.1;
-    }
+     if (mimeType.includes('xml') || filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')) {
+       detectedFormat = 'MusicXML';
+       const xmlContent = file.toString('utf-8');
+       dimensions = await analyzeMusicXML(xmlContent);
+       metadata.format = 'MusicXML';
+       metadata.size = file.length;
+     } else if (mimeType.includes('midi') || filename.endsWith('.mid') || filename.endsWith('.midi')) {
+       detectedFormat = 'MIDI';
+       dimensions = analyzeMIDI(file);
+       metadata.format = 'MIDI';
+       metadata.size = file.length;
+     } else {
+       dimensions = getDefaultDimensions();
+     }
 
     return { dimensions, detectedFormat, confidence, metadata };
   }

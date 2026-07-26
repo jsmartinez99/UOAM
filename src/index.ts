@@ -5,6 +5,9 @@ import multer from 'multer';
 import { createArrangerController } from './backend/controllers.js';
 import { config } from './config.js';
 import { QdrantAdapter } from './infrastructure/qdrant/qdrant-client.js';
+import { logger } from './infrastructure/logger.js';
+import type { LLMClient } from './ports/llm-client.port.js';
+import type { VectorDatabaseClient } from './ports/vector-database.port.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,12 +32,14 @@ const upload = multer({
 
 // Initialize Qdrant client
 const qdrantAdapter = new QdrantAdapter();
-qdrantAdapter.ensureCollection('arrangements_collection', 6).catch(console.error);
+qdrantAdapter.ensureCollection('arrangements_collection', 6).catch((error: unknown) => {
+  logger.error('Error initializing Qdrant collection:', error as Error);
+});
 
 // Dependencies
 const dependencies = {
   qdrantClient: qdrantAdapter,
-  llmClient: { generateText: async () => 'Mock analysis' } as any,
+  llmClient: { generateText: async () => 'Mock analysis' } as LLMClient,
   jwtSecret: config.jwtSecret,
 };
 
@@ -57,5 +62,5 @@ app.use((_req, res) => {
 });
 
 app.listen(config.port, () => {
-  console.log(`Server running on port ${config.port}`);
+  logger.info(`Server running on port ${config.port}`);
 });

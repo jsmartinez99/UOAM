@@ -10,13 +10,12 @@ import { VectorDatabaseClient } from '../ports/vector-database.port.js';
 import { LLMClient } from '../ports/llm-client.port.js';
 import { AppDataSource } from '../infrastructure/database/data-source.js';
 import { ArrangerProfileEntity } from '../infrastructure/database/entities/arranger-profile.entity.js';
-import type { Dimensions6D as Dim6D } from '../domain/arranger-profile.js';
 import { In } from 'typeorm';
 import { logger } from '../infrastructure/logger.js';
-import type { Dimensions6D as Dim6D } from '../domain/arranger-profile.js';
 
 // Extender Request para incluir user
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: { id: string; email: string; role: string };
@@ -73,11 +72,24 @@ export function authorizeRole(requiredRole: string) {
   };
 }
 
+// ─── Tipos de controladores ────────────────────────────────────────
+
+interface ArrangerController {
+  getAllArrangers: (req: Request, res: Response) => Promise<Response>;
+  createArranger: (req: Request, res: Response) => Promise<Response>;
+  hybridizeProfiles: (req: Request, res: Response) => Promise<Response>;
+  searchSimilar: (req: Request, res: Response) => Promise<Response>;
+  generateAnalysis: (req: Request, res: Response) => Promise<Response>;
+  registerUser: (req: Request, res: Response) => Promise<Response>;
+  loginUser: (req: Request, res: Response) => Promise<Response>;
+  uploadArrangement: (req: Request, res: Response) => Promise<Response>;
+}
+
 // ─── Controladores ─────────────────────────────────────────────────
 
 export function createArrangerController(
   dependencies: AppDependencies,
-) {
+): ArrangerController {
   const hybridEngine = new HybridEngine();
   const searchEngine = new QdrantSearchEngine(dependencies.qdrantClient);
   const llmService = new LLMIntegrationService(dependencies.llmClient);

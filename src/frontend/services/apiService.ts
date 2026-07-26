@@ -95,17 +95,17 @@ export const apiService = {
 
   // ── Autenticación ──
 
-  async register(
-    email: string,
-    password: string,
-    role: 'STANDARD' | 'ARRANGER' | 'ADMIN' = 'STANDARD',
-  ): Promise<{ id: string; email: string; role: string }> {
-    const response = await api.post('/auth/register', { email, password, role });
-    return response.data as any;
-  },
+   async register(
+     email: string,
+     password: string,
+     role: 'STANDARD' | 'ARRANGER' | 'ADMIN' = 'STANDARD',
+   ): Promise<{ id: string; email: string; role: string }> {
+     const response = await api.post('/auth/register', { email, password, role });
+     return response.data as { id: string; email: string; role: string };
+   },
 
-  async login(email: string, password: string): Promise<{ token: string; user: any }> {
+  async login(email: string, password: string): Promise<{ token: string; user: { id: string; email: string; role: string } }> {
     const response = await api.post('/auth/login', { email, password });
-    return response.data as any;
+    return response.data as { token: string; user: { id: string; email: string; role: string } };
   },
 };

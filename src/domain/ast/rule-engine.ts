@@ -2,12 +2,12 @@ import { ASTVisitor } from './visitor';
 import { BaseNode } from './base';
 import { NoteNode, ChordNode, ContainerNode } from './nodes.js';
 
-export interface Rule<T> {
+export interface Rule<T extends BaseNode> {
   apply(node: T): BaseNode;
 }
 
 export class RuleEngine implements ASTVisitor<BaseNode> {
-  constructor(private readonly rules: Map<string, Rule<any>>) {}
+  constructor(private readonly rules: Map<string, Rule<BaseNode>>) {}
 
   visitNote(node: NoteNode): BaseNode {
     const rule = this.rules.get('NoteNode');
