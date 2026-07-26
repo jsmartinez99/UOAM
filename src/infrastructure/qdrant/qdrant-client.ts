@@ -1,5 +1,6 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { VectorDatabaseClient, VectorSearchHit } from '../../ports/vector-database.port.js';
+import { logger } from '../logger.js';
 
 export class QdrantAdapter implements VectorDatabaseClient {
   private client: QdrantClient;
@@ -20,10 +21,10 @@ export class QdrantAdapter implements VectorDatabaseClient {
             distance: 'Cosine',
           },
         });
-        console.log(`Collection ${collectionName} created in Qdrant.`);
+        logger.info(`Collection ${collectionName} created in Qdrant.`);
       }
-    } catch (error) {
-      console.error('Error ensuring Qdrant collection:', error);
+    } catch (error: unknown) {
+      logger.error('Error ensuring Qdrant collection:', error as Error);
     }
   }
 
@@ -47,8 +48,8 @@ export class QdrantAdapter implements VectorDatabaseClient {
         score: hit.score,
         payload: hit.payload || {},
       }));
-    } catch (error) {
-      console.error('Error searching in Qdrant:', error);
+    } catch (error: unknown) {
+      logger.error('Error searching in Qdrant:', error as Error);
       return [];
     }
   }
@@ -70,8 +71,8 @@ export class QdrantAdapter implements VectorDatabaseClient {
           payload: p.payload,
         })),
       });
-    } catch (error) {
-      console.error('Error upserting to Qdrant:', error);
+    } catch (error: unknown) {
+      logger.error('Error upserting to Qdrant:', error as Error);
     }
   }
 }

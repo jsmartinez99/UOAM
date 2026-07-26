@@ -89,9 +89,9 @@ function analyzeMusicXML(xmlContent: string): Dimensions6D {
     const score = result['score-partwise'] || result;
     
     const allText = JSON.stringify(score);
-    const partNames = score.partList?.['score-part']?.map((p: any) => p['part-name']?.['#text'] || '') || [];
+    const partNames = score.partList?.['score-part']?.map((p: { 'part-name'?: { '#text'?: string } }) => p['part-name']?.['#text'] || '') || [];
     const partNamesText = partNames.join(' ');
-    
+
     // Extract all text content for pattern matching
     const fullText = allText + ' ' + partNamesText;
     
@@ -171,34 +171,34 @@ export class MusicFileAnalyzer {
   /**
    * Analiza un archivo musical y extrae la firma 6D
    */
-  static async analyze(file: Buffer, mimeType: string, filename: string): Promise<{
-    dimensions: Dimensions6D;
-    detectedFormat: string;
-    confidence: number;
-    metadata: Record<string, any>;
-  }> {
-    let dimensions: Dimensions6D;
-    let detectedFormat = 'unknown';
-    let confidence = 0.5;
-    const metadata: Record<string, any> = { filename };
+   static async analyze(file: Buffer, mimeType: string, filename: string): Promise<{
+     dimensions: Dimensions6D;
+     detectedFormat: string;
+     confidence: number;
+     metadata: Record<string, unknown>;
+   }> {
+     let dimensions: Dimensions6D;
+     let detectedFormat = 'unknown';
+     let confidence = 0.5;
+     const metadata: Record<string, unknown> = { filename };
 
-     if (mimeType.includes('xml') || filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')) {
-       detectedFormat = 'MusicXML';
-       const xmlContent = file.toString('utf-8');
-       dimensions = await analyzeMusicXML(xmlContent);
-       metadata.format = 'MusicXML';
-       metadata.size = file.length;
-     } else if (mimeType.includes('midi') || filename.endsWith('.mid') || filename.endsWith('.midi')) {
-       detectedFormat = 'MIDI';
-       dimensions = analyzeMIDI(file);
-       metadata.format = 'MIDI';
-       metadata.size = file.length;
-     } else {
-       dimensions = getDefaultDimensions();
-     }
+      if (mimeType.includes('xml') || filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')) {
+        detectedFormat = 'MusicXML';
+        const xmlContent = file.toString('utf-8');
+        dimensions = await analyzeMusicXML(xmlContent);
+        metadata.format = 'MusicXML';
+        metadata.size = file.length;
+      } else if (mimeType.includes('midi') || filename.endsWith('.mid') || filename.endsWith('.midi')) {
+        detectedFormat = 'MIDI';
+        dimensions = analyzeMIDI(file);
+        metadata.format = 'MIDI';
+        metadata.size = file.length;
+      } else {
+        dimensions = getDefaultDimensions();
+      }
 
-    return { dimensions, detectedFormat, confidence, metadata };
-  }
+     return { dimensions, detectedFormat, confidence, metadata };
+   }
 
   /**
    * Genera un nombre sugerido para el perfil basado en el análisis
