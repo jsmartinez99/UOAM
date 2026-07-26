@@ -12,7 +12,7 @@ export default [
         ecmaVersion: 2022,
         sourceType: 'module',
       },
-      globals: {
+       globals: {
         node: true,
         browser: true,
         process: true,
@@ -20,6 +20,9 @@ export default [
         localStorage: true,
         window: true,
         crypto: true,
+        Buffer: true,
+        File: true,
+        FormData: true,
       },
     },
     plugins: {

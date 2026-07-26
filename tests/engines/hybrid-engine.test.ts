@@ -5,7 +5,7 @@
  * Verifica resolución de conflictos de tesitura e instrumentación.
  */
 import { describe, it, expect } from 'vitest';
-import { HybridEngine, ConflictRule } from '../../src/engines/hybrid-engine';
+import { HybridEngine } from '../../src/engines/hybrid-engine';
 import { Dimensions6D } from '../../src/domain/arranger-profile';
 
 // ─── Suite ───────────────────────────────────────────────────────

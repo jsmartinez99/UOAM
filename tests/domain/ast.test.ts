@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NoteNode, ChordNode, ContainerNode } from '../../src/domain/ast/nodes';
+import { ContainerNode } from '../../src/domain/ast/nodes';
 import { ASTParser } from '../../src/domain/ast/parser';
 
 describe('AST Engine', () => {

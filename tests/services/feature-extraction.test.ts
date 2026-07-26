@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { FeatureExtractionService } from '../../src/services/feature-extraction.service';
-import { Dimensions6D } from '../../src/domain/arranger-profile';
 
 describe('FeatureExtractionService', () => {
   it('debe mapear características crudas a firma 6D', () => {

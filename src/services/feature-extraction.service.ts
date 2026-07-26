@@ -1,7 +1,7 @@
 import { Dimensions6D } from '../domain/arranger-profile';
 
 export class FeatureExtractionService {
-  extract(_rawFeatures: Record<string, any>): Dimensions6D {
+  extract(rawFeatures: Record<string, unknown>): Dimensions6D {
     return {
       organology: ['Extracted Instrument'],
       harmony: ['Extracted Harmony'],
