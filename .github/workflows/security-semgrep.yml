@@ -1,0 +1,39 @@
+name: Security - Semgrep Scan
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    - cron: '0 0 * * *'  # Todos los días a medianoche
+
+jobs:
+  semgrep:
+    name: Semgrep Code Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Para subir resultados a GitHub Security Tab
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+
+      - name: Ejecutar Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: |
+            p/ci
+            p/security-audit
+            p/secrets
+            p/javascript
+            p/typescript
+          # Escanear solo archivos relevantes (opcional)
+          target: |
+            src/
+            tests/
+            .github/workflows/
+          # Subir resultados a GitHub Security Tab
+          upload-results: true
+          # Fallar el workflow si se encuentran problemas críticos
+          severity: ERROR
