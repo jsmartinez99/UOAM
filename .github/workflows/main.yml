@@ -30,7 +30,7 @@ jobs:
       JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'ci-test-secret-do-not-use-in-prod' }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Setup Node.js
         uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7
