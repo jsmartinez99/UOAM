@@ -48,8 +48,8 @@ async function generateEvidence() {
   console.log(`2. EVIDENCIA - HERRAMIENTA DE HIBRIDACIÓN AST:`);
   console.log(`   - Status HTTP: ${hybRes.status} OK`);
   console.log(`   - Perfiles Fusionados: Carlos Centurión 🇵🇾 + Claus Ogerman 🇩🇪`);
-  console.log(`   - Organología Resultante: ${hybData.mergedProfile?.dimensions?.organology?.join(', ')}`);
-  console.log(`   - Armonía Resultante: ${hybData.mergedProfile?.dimensions?.harmony?.join(', ')}\n`);
+  console.log(`   - Organología Resultante: ${hybData.mergedProfile?.organology?.join(', ')}`);
+  console.log(`   - Armonía Resultante: ${hybData.mergedProfile?.harmony?.join(', ')}\n`);
 
   // 4. Evidencia Generador 5D
   const genRes = await fetch(`${BASE_URL}/api/v1/arrangements/generate`, {

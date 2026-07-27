@@ -25,12 +25,12 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const allowed = ['.xml', '.musicxml', '.mxl', '.mid', '.midi'];
+    const allowed = ['.xml', '.musicxml', '.mxl', '.mid', '.midi', '.wav', '.mp3'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Formato no soportado. Use MusicXML (.xml, .musicxml, .mxl) o MIDI (.mid, .midi)'));
+      cb(new Error('Formato no soportado. Use MusicXML (.xml, .musicxml, .mxl), MIDI (.mid, .midi), WAV (.wav) o MP3 (.mp3)'));
     }
   },
 });

@@ -147,7 +147,7 @@ export default function AnalysisTool() {
       const data: any = await apiService.getArrangers();
       setArrangers(data);
     } catch {
-      setError('Error procesando archivo. Formatos aceptados: MusicXML, MIDI');
+      setError('Error procesando archivo. Formatos aceptados: MusicXML, MIDI, WAV, MP3');
     } finally {
       setLoading(false);
     }
@@ -351,15 +351,15 @@ export default function AnalysisTool() {
               <input
                 type="file"
                 hidden
-                accept=".xml,.musicxml,.mxl,.mid,.midi"
+                accept=".xml,.musicxml,.mxl,.mid,.midi,.wav,.mp3"
                 onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               />
-              <CloudUploadIcon sx={{ fontSize: 40, color: uploadFile ? 'primary.main' : 'text.disabled', mb: 1.5 }} />
+              <CloudUploadIcon sx={{ fontSize: 40, color: uploadFile ? 'primary.main' : 'text.secondary', mb: 1.5 }} />
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                 {uploadFile ? uploadFile.name : 'Haz clic para seleccionar un archivo'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Formatos aceptados: MusicXML, MIDI
+                Formatos aceptados: MusicXML, MIDI, WAV, MP3
               </Typography>
             </Box>
             <Button

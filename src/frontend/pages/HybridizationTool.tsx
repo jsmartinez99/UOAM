@@ -305,7 +305,7 @@ export default function HybridizationTool() {
             </Box>
           )}
 
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Box sx={{ mt: 4, display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               variant="outlined"
               color="inherit"
@@ -325,6 +325,26 @@ export default function HybridizationTool() {
               startIcon={<SmartToyIcon />}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Generar Análisis RAG'}
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                const names = selectedProfiles
+                  .map((id) => availableProfiles.find((p) => p.id === id)?.name)
+                  .filter(Boolean)
+                  .join(' + ');
+                navigate('/generate', {
+                  state: {
+                    hybridDimensions: result.mergedProfile,
+                    hybridTitle: `Híbrido 5D: ${names}`,
+                  },
+                });
+              }}
+              startIcon={<AutoAwesomeIcon />}
+              sx={{ fontWeight: 700 }}
+            >
+              Generar Arreglo 5D con este Híbrido
             </Button>
           </Box>
         </ResultBox>

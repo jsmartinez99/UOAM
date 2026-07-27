@@ -16,13 +16,17 @@ import {
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { apiService } from '../services/apiService';
+import { useLocation } from 'react-router';
 import ArrangementTimeline, { ArrangementTimelineProps } from '../components/ArrangementTimeline';
 import AudioArrangementPlayer from '../components/AudioArrangementPlayer';
 
 export default function StandaloneArrangerPage() {
+  const location = useLocation();
+  const hybridState = location.state as { hybridDimensions?: Record<string, string[]>; hybridTitle?: string } | null;
+
   const [arrangers, setArrangers] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
-  const [title, setTitle] = useState<string>('Quítame la ropa antes del amanecer');
+  const [title, setTitle] = useState<string>(hybridState?.hybridTitle || 'Quítame la ropa antes del amanecer');
   const [keyCenter, setKeyCenter] = useState<string>('Cm');
   const [tempoBpm, setTempoBpm] = useState<number>(78);
   const [timeSignature, setTimeSignature] = useState<string>('4/4');
@@ -62,6 +66,7 @@ export default function StandaloneArrangerPage() {
         tempoBpm,
         timeSignature,
         profileId: selectedProfileId || undefined,
+        dimensionsOverride: hybridState?.hybridDimensions,
       });
 
       setGeneratedArrangement(result);

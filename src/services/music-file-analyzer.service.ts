@@ -257,6 +257,16 @@ export class MusicFileAnalyzer {
         dimensions = analyzeMIDI(file);
         metadata.format = 'MIDI';
         metadata.size = file.length;
+      } else if (mimeType.includes('wav') || filename.endsWith('.wav')) {
+        detectedFormat = 'WAV';
+        dimensions = getDefaultDimensions();
+        metadata.format = 'WAV';
+        metadata.size = file.length;
+      } else if (mimeType.includes('mp3') || filename.endsWith('.mp3') || mimeType.includes('mpeg')) {
+        detectedFormat = 'MP3';
+        dimensions = getDefaultDimensions();
+        metadata.format = 'MP3';
+        metadata.size = file.length;
       } else {
         dimensions = getDefaultDimensions();
       }
@@ -294,7 +304,11 @@ export class MusicFileAnalyzer {
       ? 'application/xml'
       : filename.endsWith('.mid') || filename.endsWith('.midi')
         ? 'audio/midi'
-        : 'application/octet-stream';
+        : filename.endsWith('.wav')
+          ? 'audio/wav'
+          : filename.endsWith('.mp3')
+            ? 'audio/mp3'
+            : 'application/octet-stream';
     
     const analysis = await MusicFileAnalyzer.analyze(buffer, mimeType, filename);
     const name = MusicFileAnalyzer.suggestName(analysis.dimensions, analysis.metadata);
