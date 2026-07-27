@@ -7,6 +7,7 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import DownloadIcon from '@mui/icons-material/Download';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Soundfont } from 'smplr';
 import { ArrangementSection } from './ArrangementTimeline';
 
 export interface AudioArrangementPlayerProps {
@@ -50,35 +51,41 @@ interface InstrumentVoice {
   attackGain: number;
 }
 
-const INSTRUMENT_VOICES: Record<string, InstrumentVoice> = {
-  'Orquesta de Conservatorio Francés (Divis a 8 Partes Reales)': {
-    name: 'orchestra', waveform: 'sawtooth', detune: 0, harmonicMix: 0.35,
-    filterFreq: 2200, filterQ: 0.7, attackGain: 0.18,
-  },
-  'Moderne Parodas (Oboe, Clarinete, Fagot)': {
-    name: 'woodwinds', waveform: 'triangle', detune: 0, harmonicMix: 0.5,
-    filterFreq: 1800, filterQ: 1.0, attackGain: 0.2,
-  },
-  'Acordeón (Instrumento Folclórico)': {
-    name: 'accordion', waveform: 'sawtooth', detune: -7, harmonicMix: 0.4,
-    filterFreq: 2600, filterQ: 0.8, attackGain: 0.22,
-  },
-  'Celesta, Glokenspiel y Arpa': {
-    name: 'harp', waveform: 'sine', detune: 0, harmonicMix: 0.1,
-    filterFreq: 4500, filterQ: 0.5, attackGain: 0.12,
-  },
-  default: {
-    name: 'default', waveform: 'sine', detune: 0, harmonicMix: 0.2,
-    filterFreq: 3000, filterQ: 0.6, attackGain: 0.18,
-  },
-};
+const INSTRUMENT_PATCHES: Array<{ keywords: string[]; patch: string; label: string }> = [
+  { keywords: ['piccolo'], patch: 'piccolo', label: 'Piccolo' },
+  { keywords: ['flute', 'flauta'], patch: 'flute', label: 'Flauta' },
+  { keywords: ['oboe', 'oboé'], patch: 'oboe', label: 'Oboe' },
+  { keywords: ['clarinete', 'clarinet'], patch: 'clarinet', label: 'Clarinete' },
+  { keywords: ['fagot', 'bassoon', 'fagotto'], patch: 'bassoon', label: 'Fagot' },
+  { keywords: ['tuba'], patch: 'tuba', label: 'Tuba' },
+  { keywords: ['trombone', 'trombón'], patch: 'trombone', label: 'Trombón' },
+  { keywords: ['trumpet', 'trompeta'], patch: 'trumpet', label: 'Trompeta' },
+  { keywords: ['french horn', 'corno francés', 'horn'], patch: 'french_horn', label: 'Corno francés' },
+  { keywords: ['cello', 'violonchelo', 'chelo'], patch: 'cello', label: 'Violonchelo' },
+  { keywords: ['viola'], patch: 'viola', label: 'Viola' },
+  { keywords: ['violin', 'violín'], patch: 'violin', label: 'Violín' },
+  { keywords: ['contrabass', 'contrabajo'], patch: 'contrabass', label: 'Contrabajo' },
+  { keywords: ['glockenspiel', 'glokenspiel'], patch: 'glockenspiel', label: 'Glockenspiel' },
+  { keywords: ['celesta'], patch: 'celesta', label: 'Celesta' },
+  { keywords: ['harp', 'arpa'], patch: 'orchestral_harp', label: 'Arpa' },
+  { keywords: ['acordeón', 'accordion'], patch: 'accordion', label: 'Acordeón' },
+  { keywords: ['piano'], patch: 'acoustic_grand_piano', label: 'Piano' },
+  { keywords: ['guitarra', 'guitar'], patch: 'acoustic_guitar_nylon', label: 'Guitarra' },
+  { keywords: ['brass', 'metales'], patch: 'brass_section', label: 'Metales' },
+  { keywords: ['strings', 'cuerdas'], patch: 'string_ensemble_1', label: 'Cuerdas' },
+  { keywords: ['madera', 'maderas', 'woodwind'], patch: 'flute', label: 'Maderas' },
+  { keywords: ['conservatorio francés', 'conservatorio', 'orquesta'], patch: 'string_ensemble_1', label: 'Orquesta de cuerdas' },
+  { keywords: ['parodia', 'parodias'], patch: 'oboe', label: 'Parodias (Oboe/Clarinete/Fagot)' },
+];
 
-const DYNAMIC_GAIN: Record<string, number> = {
-  ppp: 0.05, pp: 0.10, p: 0.18, mf: 0.32, f: 0.55, ff: 0.80,
-};
-
-const DYNAMIC_FILTER_MULT: Record<string, number> = {
-  ppp: 0.5, pp: 0.6, p: 0.75, mf: 1.0, f: 1.3, ff: 1.6,
+const pickInstrumentPatch = (instruments: string[]): { patch: string; label: string } => {
+  const all = instruments.map((s) => s.toLowerCase()).join(' ');
+  for (const entry of INSTRUMENT_PATCHES) {
+    if (entry.keywords.some((kw) => all.includes(kw))) {
+      return { patch: entry.patch, label: entry.label };
+    }
+  }
+  return { patch: 'acoustic_grand_piano', label: 'Piano (fallback)' };
 };
 
 const PITCH_CLASSES: Record<string, number> = {
@@ -127,11 +134,12 @@ const buildChordTones = (scaleMidis: number[], mode: 'major' | 'minor', degree: 
   return field.map((iv) => root + iv);
 };
 
-const pickInstrumentVoice = (instruments: string[]): InstrumentVoice => {
-  for (const inst of instruments) {
-    if (INSTRUMENT_VOICES[inst]) return INSTRUMENT_VOICES[inst];
-  }
-  return INSTRUMENT_VOICES.default;
+const pickInstrumentVoice = (instruments: string[]): { name: string } => {
+  return { name: pickInstrumentPatch(instruments).label };
+};
+
+const DYNAMIC_GAIN: Record<string, number> = {
+  ppp: 0.40, pp: 0.50, p: 0.60, mf: 0.72, f: 0.82, ff: 0.95,
 };
 
 const buildImpulseResponse = (ctx: BaseAudioContext, durationSec: number, decay: number): AudioBuffer => {
@@ -161,8 +169,7 @@ interface NoteEvent {
   startSec: number;
   durationSec: number;
   velocity: number;
-  voice: InstrumentVoice;
-  filterCutoff: number;
+  patch: string;
 }
 
 const buildSectionScore = (
@@ -178,10 +185,8 @@ const buildSectionScore = (
   const bars = countBars(section.bars.start, section.bars.end);
   const sectionDurationSec = bars * secondsPerBar;
 
-  const voice = pickInstrumentVoice(section.activeInstruments);
-  const baseVelocity = DYNAMIC_GAIN[section.dynamicEnvelope] ?? 0.3;
-  const filterMult = DYNAMIC_FILTER_MULT[section.dynamicEnvelope] ?? 1.0;
-  const filterCutoff = Math.min(8000, voice.filterFreq * filterMult);
+  const baseVelocity = DYNAMIC_GAIN[section.dynamicEnvelope] ?? 0.4;
+  const patch = pickInstrumentPatch(section.activeInstruments);
 
   const events: NoteEvent[] = [];
   const isClimax = section.name === 'Climax';
@@ -214,8 +219,7 @@ const buildSectionScore = (
         startSec: t,
         durationSec: Math.min(dur, sectionDurationSec - t),
         velocity: baseVelocity * (v === 0 ? 1.0 : 0.7),
-        voice,
-        filterCutoff,
+        patch,
       });
     }
 
@@ -226,71 +230,14 @@ const buildSectionScore = (
   return { events, sectionDurationSec };
 };
 
-interface ScheduledNode {
-  osc: OscillatorNode;
-  osc2?: OscillatorNode;
-  gain: GainNode;
-  filter: BiquadFilterNode;
-}
-
-const scheduleNote = (
-  ctx: AudioContext,
-  masterBus: AudioNode,
-  startTime: number,
-  event: NoteEvent,
-): ScheduledNode => {
-  const { midi, durationSec, velocity, voice, filterCutoff } = event;
-  const freq = midiToFreq(midi);
-
-  const osc = ctx.createOscillator();
-  osc.type = voice.waveform;
-  osc.frequency.setValueAtTime(freq, startTime);
-  osc.detune.setValueAtTime(voice.detune, startTime);
-
-  let osc2: OscillatorNode | undefined;
-  if (voice.harmonicMix > 0 && voice.waveform !== 'sine') {
-    osc2 = ctx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(freq * 2, startTime);
-    osc2.detune.setValueAtTime(-voice.detune, startTime);
-  }
-
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(Math.max(200, filterCutoff), startTime);
-  filter.Q.setValueAtTime(voice.filterQ, startTime);
-
-  const gain = ctx.createGain();
-  const attackTime = 0.03;
-  const decayTime = 0.1;
-  const sustainLevel = velocity * 0.7;
-  const releaseTime = Math.min(0.25, durationSec * 0.4);
-
-  gain.gain.setValueAtTime(0, startTime);
-  gain.gain.linearRampToValueAtTime(velocity, startTime + attackTime);
-  gain.gain.linearRampToValueAtTime(sustainLevel, startTime + attackTime + decayTime);
-  gain.gain.setValueAtTime(sustainLevel, startTime + durationSec);
-  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec + releaseTime);
-
-  osc.connect(filter);
-  if (osc2) {
-    const harmonicGain = ctx.createGain();
-    harmonicGain.gain.setValueAtTime(voice.harmonicMix, startTime);
-    osc2.connect(harmonicGain);
-    harmonicGain.connect(filter);
-  }
-  filter.connect(gain);
-  gain.connect(masterBus);
-
-  osc.start(startTime);
-  osc.stop(startTime + durationSec + releaseTime + 0.05);
-  if (osc2) {
-    osc2.start(startTime);
-    osc2.stop(startTime + durationSec + releaseTime + 0.05);
-  }
-
-  return { osc, osc2, gain, filter };
+type SoundfontInstance = {
+  start: (event: { note: number; velocity?: number; time?: number }) => (time?: number) => void;
+  stop: () => void;
 };
+
+interface ScheduledNote {
+  stop: (time?: number) => void;
+}
 
 export default function AudioArrangementPlayer({
   sections,
@@ -309,8 +256,10 @@ export default function AudioArrangementPlayer({
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const masterBusRef = useRef<GainNode | null>(null);
-  const reverbBusRef = useRef<ConvolverNode | null>(null);
-  const scheduledNodesRef = useRef<ScheduledNode[]>([]);
+  const reverbBusRef = useRef<GainNode | null>(null);
+  const scheduledNotesRef = useRef<ScheduledNote[]>([]);
+  const soundfontCacheRef = useRef<Map<string, SoundfontInstance>>(new Map());
+  const soundfontLoadingRef = useRef<Map<string, Promise<SoundfontInstance>>>(new Map());
   const animationFrameRef = useRef<number | null>(null);
   const playStartTimeRef = useRef<number>(0);
   const sectionBoundariesRef = useRef<{ start: number; end: number; name: string }[]>([]);
@@ -351,9 +300,9 @@ export default function AudioArrangementPlayer({
       contextSampleRate: ctx.sampleRate,
       contextBaseLatency: (ctx as any).baseLatency ?? null,
       masterGain: masterBusRef.current?.gain.value ?? 0,
-      notesScheduled: scheduledNodesRef.current.length,
+      notesScheduled: scheduledNotesRef.current.length,
       notesPlayed: notesPlayedRef.current,
-      activeOscillators: scheduledNodesRef.current.length,
+      activeOscillators: scheduledNotesRef.current.length,
       scheduledSection: sections[activeSectionIndex]?.name ?? '(ninguna)',
       scheduledBars: sections.reduce((acc, s) => acc + Math.max(1, s.bars.end - s.bars.start + 1), 0),
       totalDurationSec: totalDurationRef.current,
@@ -361,7 +310,7 @@ export default function AudioArrangementPlayer({
     });
   }, [sections, activeSectionIndex]);
 
-  const startPlayback = () => {
+  const startPlayback = async () => {
     if (isPlaying) return;
     logsRef.current = [];
     setLogs([]);
@@ -429,8 +378,78 @@ export default function AudioArrangementPlayer({
       let totalDuration = 0;
       let totalEvents = 0;
 
+      const PREVIEW_BUDGET_SEC = 30;
+      const perSectionCap = Math.max(4, Math.floor(PREVIEW_BUDGET_SEC / sections.length));
+      let previewBudgetUsed = 0;
+      pushLog({
+        level: 'info',
+        category: 'graph',
+        message: `Preview budget: ${PREVIEW_BUDGET_SEC}s, cap por sección: ${perSectionCap}s`,
+      });
+
+      const patchesNeeded = new Set<string>();
+      sections.forEach((s) => patchesNeeded.add(pickInstrumentPatch(s.activeInstruments).patch));
+      pushLog({
+        level: 'info',
+        category: 'graph',
+        message: `Patches a cargar: ${[...patchesNeeded].join(', ')}`,
+      });
+
+      const loadPatches = async (): Promise<void> => {
+        await Promise.all([...patchesNeeded].map(async (patch) => {
+          if (soundfontCacheRef.current.has(patch)) return;
+          if (soundfontLoadingRef.current.has(patch)) {
+            await soundfontLoadingRef.current.get(patch);
+            return;
+          }
+          const p = new Promise<SoundfontInstance>((resolve, reject) => {
+            try {
+              const inst = Soundfont({ instrument: patch, destination: masterBus, volume: -8 });
+              inst.start; inst.stop;
+              const start = Date.now();
+              const waitForLoad = (): void => {
+                if ((inst as any)._buffers && (inst as any)._buffers.size > 0) {
+                  pushLog({
+                    level: 'info',
+                    category: 'graph',
+                    message: `Soundfont ${patch} cargado`,
+                    data: { loadTimeMs: Date.now() - start, buffers: (inst as any)._buffers.size },
+                  });
+                  resolve(inst as unknown as SoundfontInstance);
+                } else {
+                  setTimeout(waitForLoad, 50);
+                }
+              };
+              waitForLoad();
+            } catch (e) {
+              pushLog({
+                level: 'error',
+                category: 'graph',
+                message: `Soundfont ${patch} falló al cargar`,
+                data: { error: String(e) },
+              });
+              reject(e);
+            }
+          });
+          soundfontLoadingRef.current.set(patch, p);
+          try {
+            const inst = await p;
+            soundfontCacheRef.current.set(patch, inst);
+          } catch {
+            // ya loggeado
+          }
+        }));
+      };
+
+      await loadPatches();
+      pushLog({
+        level: 'info',
+        category: 'graph',
+        message: `Soundfonts cargados: ${soundfontCacheRef.current.size}/${patchesNeeded.size}`,
+      });
+
       sections.forEach((section, sIdx) => {
-        const { events, sectionDurationSec } = buildSectionScore(
+        const { events: fullEvents, sectionDurationSec: fullDuration } = buildSectionScore(
           section,
           tempoBpm,
           timeSig,
@@ -438,40 +457,66 @@ export default function AudioArrangementPlayer({
           mode,
         );
         const sectionStart = globalStart;
+        const remainingBudget = PREVIEW_BUDGET_SEC - previewBudgetUsed;
+        const sectionCap = Math.max(2, Math.min(perSectionCap, remainingBudget));
+        const truncated = fullDuration > sectionCap;
+        const sectionDurationSec = truncated ? sectionCap : fullDuration;
+        const events = truncated
+          ? fullEvents.filter((e) => e.startSec < sectionCap)
+          : fullEvents;
+
+        const { patch, label } = pickInstrumentPatch(section.activeInstruments);
+        const inst = soundfontCacheRef.current.get(patch);
+
         pushLog({
           level: 'info',
           category: 'graph',
           message: `Section ${sIdx + 1}/${sections.length}: ${section.name}`,
           data: {
             bars: `${section.bars.start}-${section.bars.end}`,
-            durationSec: sectionDurationSec.toFixed(2),
+            fullDurationSec: fullDuration.toFixed(2),
+            previewDurationSec: sectionDurationSec.toFixed(2),
+            truncated,
             events: events.length,
             densityCap: section.densityCap,
             dynamicEnvelope: section.dynamicEnvelope,
-            voice: pickInstrumentVoice(section.activeInstruments).name,
+            patch,
+            label,
+            soundfontReady: !!inst,
+            activeInstruments: section.activeInstruments,
           },
         });
-        events.forEach((event, eIdx) => {
-          const note = scheduleNote(ctx, masterBus, sectionStart + event.startSec, event);
-          const wetNote = scheduleNote(ctx, reverb, sectionStart + event.startSec, event);
-          scheduledNodesRef.current.push(note, wetNote);
-          if (eIdx < 3) {
-            pushLog({
-              level: 'info',
-              category: 'note',
-              message: `note ${eIdx + 1} programado`,
-              data: {
-                midi: event.midi,
-                freq: midiToFreq(event.midi).toFixed(2),
-                startSec: (sectionStart + event.startSec).toFixed(3),
-                durationSec: event.durationSec.toFixed(3),
-                velocity: event.velocity.toFixed(3),
-                filterCutoff: event.filterCutoff,
-                waveform: event.voice.waveform,
-              },
-            });
-          }
-        });
+
+        if (!inst) {
+          pushLog({ level: 'warn', category: 'graph', message: `Soundfont ${patch} no disponible, saltando notas` });
+        } else {
+          events.forEach((event, eIdx) => {
+            const startTime = sectionStart + event.startSec;
+            const stopAt = startTime + event.durationSec;
+            const stopFn = inst.start({ note: event.midi, velocity: event.velocity, time: startTime });
+            const wetStopFn = inst.start({ note: event.midi, velocity: event.velocity * 0.6, time: startTime });
+            scheduledNotesRef.current.push({ stop: (t?: number) => { try { stopFn(t); wetStopFn(t); } catch {} } });
+            if (t !== undefined && stopAt < t) {
+              setTimeout(() => { try { stopFn(); wetStopFn(); } catch {} }, (stopAt - ctx.currentTime) * 1000);
+            } else {
+              setTimeout(() => { try { stopFn(); wetStopFn(); } catch {} }, (stopAt - ctx.currentTime) * 1000);
+            }
+            if (eIdx < 3) {
+              pushLog({
+                level: 'info',
+                category: 'note',
+                message: `note ${eIdx + 1} programado (${patch})`,
+                data: {
+                  midi: event.midi,
+                  freq: midiToFreq(event.midi).toFixed(2),
+                  startSec: startTime.toFixed(3),
+                  durationSec: event.durationSec.toFixed(3),
+                  velocity: event.velocity.toFixed(3),
+                },
+              });
+            }
+          });
+        }
         totalEvents += events.length;
         boundaries.push({
           start: sectionStart,
@@ -480,6 +525,7 @@ export default function AudioArrangementPlayer({
         });
         totalDuration += sectionDurationSec;
         globalStart += sectionDurationSec;
+        previewBudgetUsed += sectionDurationSec;
       });
 
       totalDurationRef.current = totalDuration;
@@ -489,7 +535,7 @@ export default function AudioArrangementPlayer({
         level: 'info',
         category: 'lifecycle',
         message: 'playback iniciado',
-        data: { totalEvents, totalDurationSec: totalDuration.toFixed(2), scheduledNodes: scheduledNodesRef.current.length },
+        data: { totalEvents, totalDurationSec: totalDuration.toFixed(2), scheduledNotes: scheduledNotesRef.current.length },
       });
       setIsPlaying(true);
       setActiveSectionIndex(0);
@@ -537,21 +583,24 @@ export default function AudioArrangementPlayer({
       level: 'info',
       category: 'lifecycle',
       message: 'stopPlayback invoked',
-      data: { elapsedSec: Math.max(0, elapsed).toFixed(2), notesPlayed: notesPlayedRef.current, scheduledNodes: scheduledNodesRef.current.length },
+      data: { elapsedSec: Math.max(0, elapsed).toFixed(2), notesPlayed: notesPlayedRef.current, scheduledNotes: scheduledNotesRef.current.length },
     });
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    scheduledNodesRef.current.forEach(({ osc, osc2 }) => {
-      try { osc.stop(); } catch (e) {
-        pushLog({ level: 'warn', category: 'lifecycle', message: 'osc.stop() falló', data: { error: String(e) } });
-      }
-      try { osc2?.stop(); } catch (e) {
-        pushLog({ level: 'warn', category: 'lifecycle', message: 'osc2.stop() falló', data: { error: String(e) } });
+    scheduledNotesRef.current.forEach(({ stop }) => {
+      try { stop(); } catch (e) {
+        pushLog({ level: 'warn', category: 'lifecycle', message: 'note.stop() falló', data: { error: String(e) } });
       }
     });
-    scheduledNodesRef.current = [];
+    scheduledNotesRef.current = [];
+    soundfontCacheRef.current.forEach((inst) => {
+      try { inst.stop(); } catch (e) {
+        pushLog({ level: 'warn', category: 'lifecycle', message: 'soundfont.stop() falló', data: { error: String(e) } });
+      }
+    });
+    soundfontCacheRef.current.clear();
     if (audioCtxRef.current) {
       audioCtxRef.current.close().then(() => {
         pushLog({ level: 'info', category: 'context', message: 'AudioContext cerrado' });
@@ -575,7 +624,7 @@ export default function AudioArrangementPlayer({
       config: { keyCenter, mode: parseKeyCenter(keyCenter).mode, tempoBpm, timeSignature: parseTimeSignature(timeSignature), sections: sections.length },
       metrics,
       events: {
-        totalScheduled: scheduledNodesRef.current.length || 0,
+        totalScheduled: scheduledNotesRef.current.length || 0,
         totalPlayed: notesPlayedRef.current,
       },
       log: logsRef.current,
@@ -615,7 +664,7 @@ export default function AudioArrangementPlayer({
                 Previsualización Sonora en Tiempo Real
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Síntesis aditiva con ADSR · {keyCenter ?? 'C major'} · {tempoBpm} BPM · {timeSignature ?? '4/4'}
+                Soundfont (samples reales) · {keyCenter ?? 'C major'} · {tempoBpm} BPM · {timeSignature ?? '4/4'}
               </Typography>
             </Box>
           </Box>
@@ -674,7 +723,7 @@ export default function AudioArrangementPlayer({
               }}
             />
             <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-              {notesPlayedCount} notas reproducidas · {scheduledNodesRef.current.length} osciladores · {Math.max(0, totalDurationRef.current - (audioCtxRef.current?.currentTime ?? 0) + (playStartTimeRef.current + 0.15)).toFixed(1)}s restantes
+              {notesPlayedCount} notas reproducidas · {scheduledNotesRef.current.length} voces · {Math.max(0, totalDurationRef.current - (audioCtxRef.current?.currentTime ?? 0) + (playStartTimeRef.current + 0.15)).toFixed(1)}s restantes
             </Typography>
           </Box>
         )}
