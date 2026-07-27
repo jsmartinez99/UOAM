@@ -16,6 +16,7 @@ export interface OllamaConfig {
   baseUrl: string;
   model: string;
   timeoutMs: number;
+  apiKey?: string;
 }
 
 export function loadOllamaConfig(overrides: Partial<OllamaConfig> = {}): OllamaConfig {
@@ -23,6 +24,7 @@ export function loadOllamaConfig(overrides: Partial<OllamaConfig> = {}): OllamaC
     baseUrl: overrides.baseUrl ?? process.env.OLLAMA_URL ?? 'http://localhost:11434',
     model: overrides.model ?? process.env.OLLAMA_MODEL ?? 'qwen2.5:3b',
     timeoutMs: overrides.timeoutMs ?? Number.parseInt(process.env.LLM_TIMEOUT_MS ?? '60000', 10),
+    apiKey: overrides.apiKey ?? process.env.OLLAMA_API_KEY,
   };
 }
 
@@ -34,9 +36,13 @@ export class OllamaLLMClient implements LLMClient {
     const timer = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (this.config.apiKey) {
+        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      }
       const response = await fetch(`${this.config.baseUrl}/api/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           model: this.config.model,
           prompt: systemPrompt,
@@ -68,7 +74,12 @@ export class OllamaLLMClient implements LLMClient {
    */
   async healthCheck(): Promise<{ ok: boolean; model: string; error?: string }> {
     try {
+      const headers: Record<string, string> = {};
+      if (this.config.apiKey) {
+        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      }
       const response = await fetch(`${this.config.baseUrl}/api/tags`, {
+        headers,
         signal: AbortSignal.timeout(5000),
       });
       if (!response.ok) {

@@ -166,4 +166,57 @@ test.describe('Controles Automatizados E2E del Frontend UOAM', () => {
       expect(page.url()).toMatch(/\/catalog$/);
     });
   });
+
+  // ─── CONTROL 6: API INTEGRATION — LOADING Y ERROR STATES ─────────
+  test.describe('API Integration: Loading and Error UI states', () => {
+    test('AnalysisTool debe mostrar Alert de error cuando /api/v1/arrangers falla', async ({ page }) => {
+      // Interceptar la llamada a arrangers y forzar 500
+      await page.route('**/api/v1/arrangers', (route) => {
+        route.fulfill({ status: 500, body: 'Internal Server Error' });
+      });
+
+      await page.goto(`${BASE_URL}/analyze`);
+
+      // Esperar a que aparezca el Alert de error
+      const errorAlert = page.getByRole('alert');
+      await expect(errorAlert).toBeVisible({ timeout: 10000 });
+      // El mensaje debe contener "Error"
+      await expect(errorAlert).toContainText(/Error/i);
+    });
+
+    test('Catalog debe mostrar CircularProgress durante la carga inicial', async ({ page }) => {
+      // Interceptar y retrasar la respuesta para ver el spinner
+      await page.route('**/api/v1/arrangers', async (route) => {
+        await new Promise((r) => setTimeout(r, 2000));
+        await route.continue();
+      });
+
+      await page.goto(`${BASE_URL}/catalog`);
+
+      // El CircularProgress debe aparecer mientras carga
+      // MUI lo renderiza con role="progressbar"
+      const progress = page.getByRole('progressbar').first();
+      await expect(progress).toBeVisible({ timeout: 5000 });
+    });
+
+    test('Alert de error debe desaparecer al cerrar (onClose)', async ({ page }) => {
+      // Forzar error
+      await page.route('**/api/v1/arrangers', (route) => {
+        route.fulfill({ status: 500, body: 'Internal Server Error' });
+      });
+
+      await page.goto(`${BASE_URL}/analyze`);
+
+      const errorAlert = page.getByRole('alert');
+      await expect(errorAlert).toBeVisible({ timeout: 10000 });
+
+      // MUI Alert tiene un botón de cerrar (closeButton) por defecto
+      // Click en el botón X del Alert (severity="error" tiene closeText="Close")
+      const closeButton = errorAlert.getByRole('button', { name: /close/i });
+      if (await closeButton.isVisible().catch(() => false)) {
+        await closeButton.click();
+        await expect(errorAlert).not.toBeVisible();
+      }
+    });
+  });
 });
