@@ -9,6 +9,13 @@ const DIMENSION_KEYS: Array<keyof Dimensions6D> = [
   'taste',
 ];
 
+/**
+ * Servicio de extracción de features 6D a partir de datos crudos.
+ *
+ * Valida que cada dimensión sea un array de strings; en caso contrario,
+ * genera un valor por defecto. No realiza análisis musical profundo:
+ * solo normaliza la forma de los datos.
+ */
 export class FeatureExtractionService {
   extract(rawFeatures: Record<string, unknown>): Dimensions6D {
     const result = {} as Dimensions6D;

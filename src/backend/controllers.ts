@@ -350,7 +350,7 @@ export function createArrangerController(
    */
    async function generateAnalysis(req: Request, res: Response): Promise<Response> {
      try {
-       const { context } = req.body;
+       const context = req.body.context || req.body;
        const report = await llmService.generateArrangementReport(context);
        return res.json(report);
      } catch (error: unknown) {

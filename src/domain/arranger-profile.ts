@@ -41,6 +41,12 @@ export const DIMENSION_KEYS: readonly (keyof Dimensions6D)[] = [
 
 // ─── Domain Errors ───────────────────────────────────────────────
 
+/**
+ * Error lanzado cuando los datos de entrada no cumplen las invariantes
+ * del dominio (nombre vacío, dimensión faltante, etc.).
+ *
+ * Debe ser capturado por la capa de presentación y traducido a HTTP 400.
+ */
 export class DomainValidationError extends Error {
   constructor(message: string) {
     super(message);

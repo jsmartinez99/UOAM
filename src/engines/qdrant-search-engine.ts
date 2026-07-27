@@ -15,11 +15,19 @@ import { VectorDatabaseClient } from '../ports/vector-database.port.js';
 // ─── Tipos del Motor Semántico ───────────────────────────────────
 
 export interface SearchResult {
+  /** Nombre o identificador del arreglista encontrado. */
   arranger: string;
+  /** Score de similitud coseno (0-1, mayor = más similar). */
   score: number;
+  /** Dimensión 6D que más contribuyó a la similitud. */
   matchedDimension?: string;
 }
 
+/**
+ * Reporte de atribución estilística: top match + confidence + candidatos.
+ * `confidence` se calcula con base en el score del top match y los thresholds
+ * HIGH (0.85), MEDIUM (0.7), LOW (0.5), NONE (< 0.5).
+ */
 export interface AttributionReport {
   topMatch: SearchResult | null;
   candidates: SearchResult[];

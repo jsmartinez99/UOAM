@@ -20,16 +20,38 @@ import { PiccoloLowRegisterRule } from '../domain/ast/rules/piccolo-low-register
 import { TubaHighVoicingRule } from '../domain/ast/rules/tuba-high-voicing.js';
 import { TransposeRule } from '../domain/ast/rules/transpose.js';
 
+/**
+ * Entrada mínima para una fusión: las dos dimensiones que generan
+ * conflictos de tesitura (organología + textura).
+ */
 export interface MergeInput {
   organology: string[];
   texture: string[];
 }
 
+/**
+ * Resultado de una fusión: features resueltas + log de resoluciones
+ * aplicadas por el AST/Rule Engine.
+ */
 export interface MergedProfile {
   resolvedFeatures: Record<string, string[]>;
   resolutionLog: string[];
 }
 
+/**
+ * Motor de hibridación principal del sistema.
+ *
+ * Construye un AST musical a partir de las features de entrada, aplica
+ * las reglas de resolución de conflictos (CompositeConflict, voicing
+ * rules, transposición), y devuelve el perfil fusionado.
+ *
+ * Reglas registradas por defecto:
+ * - CompositeConflictRule: detecta conflictos de tesitura
+ * - FluteLowVoicingRule: transpone voicing grave de flauta
+ * - PiccoloLowRegisterRule: sube registros graves de flautín
+ * - TubaHighVoicingRule: baja voicing agudo de tuba
+ * - TransposeRule(0): passthrough (configurable por mergeFullSignatures)
+ */
 export class HybridEngine {
   private readonly ruleEngine: RuleEngine;
   private readonly astBuilder: MusicASTBuilder;
@@ -46,6 +68,13 @@ export class HybridEngine {
     this.astBuilder = new MusicASTBuilder();
   }
 
+  /**
+   * Fusiona organología + textura de dos arreglistas, resolviendo conflictos
+   * de tesitura mediante AST/Rule Engine.
+   *
+   * @param features - Dimensiones de entrada
+   * @returns Perfil fusionado con features resueltas y log de resoluciones
+   */
   merge(features: MergeInput): MergedProfile {
     const ast = this.astBuilder.buildFromMergeInput(features);
     const resolvedAst = this.ruleEngine.apply(ast);
@@ -72,6 +101,15 @@ export class HybridEngine {
     };
   }
 
+  /**
+   * Fusiona dos firmas 6D completas. Las dimensiones de armonía, contrapunto,
+   * ritmo y taste se unen por unión de conjuntos (sin resolución de conflictos).
+   * Solo organología y textura pasan por el AST.
+   *
+   * @param signatureA - Primera firma 6D
+   * @param signatureB - Segunda firma 6D
+   * @returns Firma fusionada y log de resoluciones aplicadas
+   */
   mergeFullSignatures(
     signatureA: Dimensions6D,
     signatureB: Dimensions6D,

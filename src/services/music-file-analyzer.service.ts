@@ -224,6 +224,13 @@ function getDefaultDimensions(): Dimensions6D {
 
 // ─── Servicio principal ────────────────────────────────────────────
 
+/**
+ * Servicio de análisis de archivos musicales (MusicXML y MIDI).
+ *
+ * Detecta el formato por MIME type o extensión, parsea el contenido,
+ * y extrae una firma 6D parcial mediante heurísticas (no análisis
+ * simbólico profundo).
+ */
 export class MusicFileAnalyzer {
   /**
    * Analiza un archivo musical y extrae la firma 6D
