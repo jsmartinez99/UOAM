@@ -16,20 +16,17 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "allowImportingTsExtensions": true,
-    "sourceMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
-      "@domain/*": ["src/domain/*"],
-      "@engines/*": ["src/engines/*"],
-      "@services/*": ["src/services/*"],
-      "@ports/*": ["src/ports/*"],
-      "@adapters/*": ["src/adapters/*"],
-      "@infrastructure/*": ["src/infrastructure/*"]
+      "@domain/*": ["./src/domain/*"],
+      "@engines/*": ["./src/engines/*"],
+      "@services/*": ["./src/services/*"],
+      "@ports/*": ["./src/ports/*"],
+      "@adapters/*": ["./src/adapters/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"]
     }
   },
   "include": ["src/**/*.ts"],
