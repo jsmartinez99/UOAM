@@ -47,6 +47,22 @@ describe('UserService', () => {
     await expect(service.registerUser('user@example.com', 'Short1!')).rejects.toThrow();
   });
 
+  it('debe rechazar contraseñas sin mayúsculas', async () => {
+    await expect(service.registerUser('user@example.com', 'nouppercase1!')).rejects.toThrow();
+  });
+
+  it('debe rechazar contraseñas sin minúsculas', async () => {
+    await expect(service.registerUser('user@example.com', 'NOLOWER1!')).rejects.toThrow();
+  });
+
+  it('debe rechazar contraseñas sin números', async () => {
+    await expect(service.registerUser('user@example.com', 'NoNumber!')).rejects.toThrow();
+  });
+
+  it('debe rechazar contraseñas sin caracteres especiales', async () => {
+    await expect(service.registerUser('user@example.com', 'NoSpecial123')).rejects.toThrow();
+  });
+
   it('debe registrar un usuario con rol STANDARD por defecto', async () => {
     const user = await service.registerUser('test_' + Date.now() + '@example.com', 'ValidPass123!');
     expect(user.email).toContain('@example.com');

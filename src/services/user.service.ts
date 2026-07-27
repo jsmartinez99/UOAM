@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { UserEntity } from '../infrastructure/database/entities/user.entity.js';
 import { AppDataSource } from '../infrastructure/database/data-source.js';
+import { logger } from '../infrastructure/logger.js';
 
 // ─── Tipos de dominio ────────────────────────────────────────────
 
@@ -168,7 +169,7 @@ export class UserService {
         createdAt: user.createdAt,
       };
     } catch (error) {
-      console.error('Error verifying credentials:', error);
+      logger.error('Error verifying credentials', error as Error);
       return undefined;
     }
   }

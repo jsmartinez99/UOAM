@@ -21,6 +21,16 @@
 
 **Coverage**: 4/5 scenarios implemented.
 
+## arrangement-technical-transformation
+- [x] Traducción de rearmonización a parámetros técnicos (Matched: Traducción de rearmonización a parámetros técnicos)
+- [x] Mapeo de gestos estéticos de autor en la dimensión de Gusto (Taste) (Matched: Mapeo de gestos estéticos de autor en la dimensión de Gusto (Taste))
+- [x] Ingesta exitosa de la obra en MP3 (Matched: Ingesta exitosa de la obra en MP3)
+- [x] Re-armonización y orquestación estilo Claus Ogerman / Piazzolla (Matched: Re-armonización y orquestación estilo Claus Ogerman / Piazzolla)
+- [x] Generación autónoma de arreglo en 5 secciones desde cero (Matched: Generación autónoma de arreglo en 5 secciones desde cero)
+- [x] Certificación de Asimilación Profesional Completa (Matched: Certificación de Asimilación Profesional Completa)
+
+**Coverage**: 6/6 scenarios implemented.
+
 ## ast-engine
 - [x] Creación de nodo AST válido (Matched: debe crear un perfil válido con las 6 dimensiones completas)
 - [x] Parseo exitoso de estructura simple (Matched: debe parsear una estructura simple a AST)

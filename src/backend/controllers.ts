@@ -12,6 +12,8 @@ import { AppDataSource } from '../infrastructure/database/data-source.js';
 import { ArrangerProfileEntity } from '../infrastructure/database/entities/arranger-profile.entity.js';
 import { In } from 'typeorm';
 import { logger } from '../infrastructure/logger.js';
+import { StandaloneArrangerService } from '../services/standalone-arranger.service.js';
+import { MusicXMLExporterService } from '../services/musicxml-exporter.service.js';
 
 // Extender Request para incluir user
 declare global {
@@ -84,6 +86,8 @@ interface ArrangerController {
   registerUser: (req: Request, res: Response) => Promise<Response>;
   loginUser: (req: Request, res: Response) => Promise<Response>;
   uploadArrangement: (req: Request, res: Response) => Promise<Response>;
+  generateStandaloneArrangement: (req: Request, res: Response) => Promise<Response>;
+  exportMusicXML: (req: Request, res: Response) => Promise<void>;
 }
 
 // ─── Controladores ─────────────────────────────────────────────────
@@ -486,6 +490,56 @@ export function createArrangerController(
      }
    }
 
+   async function generateStandaloneArrangement(req: Request, res: Response): Promise<Response> {
+     try {
+       const { title, keyCenter, tempoBpm, timeSignature, profileId, dimensionsOverride } = req.body || {};
+       let targetArrangerProfile: ArrangerProfile | undefined;
+
+       if (profileId) {
+         const repo = AppDataSource.getRepository(ArrangerProfileEntity);
+         const entity = await repo.findOne({ where: { id: profileId } });
+         if (entity) {
+           targetArrangerProfile = new ArrangerProfile(entity.name, entity.dimensions, entity.id);
+         }
+       }
+
+       const arrangerService = new StandaloneArrangerService();
+       const result = arrangerService.generateArrangement({
+         title,
+         keyCenter,
+         tempoBpm,
+         timeSignature,
+         targetArrangerProfile,
+         dimensionsOverride,
+       });
+
+       return res.status(200).json(result);
+     } catch (error: unknown) {
+       const err = error as Error;
+       return res.status(400).json({ error: err.message });
+     }
+   }
+
+   async function exportMusicXML(req: Request, res: Response): Promise<void> {
+     try {
+       const arrangement = req.body;
+       if (!arrangement || !arrangement.sections) {
+         res.status(400).json({ error: 'Arreglo inválido o ausente' });
+         return;
+       }
+
+       const exporter = new MusicXMLExporterService();
+       const xml = exporter.exportToMusicXML(arrangement);
+
+       res.setHeader('Content-Type', 'application/xml');
+       res.setHeader('Content-Disposition', `attachment; filename="${arrangement.title || 'arrangement'}.musicxml"`);
+       res.status(200).send(xml);
+     } catch (error: unknown) {
+       const err = error as Error;
+       res.status(400).json({ error: err.message });
+     }
+   }
+
   return {
     getAllArrangers,
     createArranger,
@@ -495,5 +549,7 @@ export function createArrangerController(
     registerUser,
     loginUser,
     uploadArrangement,
+    generateStandaloneArrangement,
+    exportMusicXML,
   };
 }

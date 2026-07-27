@@ -99,6 +99,22 @@ const DIMENSION_ICONS: Record<string, string> = {
 
 const DIMENSION_KEYS = ['organology', 'harmony', 'counterpoint', 'texture', 'rhythm', 'taste'] as const;
 
+const ARRANGER_FLAGS: Record<string, string> = {
+  'Carlos Centurión': '🇵🇾',
+  'Astor Piazzolla': '🇦🇷',
+  'Claus Ogerman': '🇩🇪',
+  'Nelson Riddle': '🇺🇸',
+  'Quincy Jones': '🇺🇸',
+  'Duke Ellington': '🇺🇸',
+  'Billy Strayhorn': '🇺🇸',
+  'Gil Evans': '🇨🇦',
+  'Henry Mancini': '🇺🇸',
+  'Sammy Nestico': '🇺🇸',
+  'Thad Jones': '🇺🇸',
+  'Clare Fischer': '🇺🇸',
+  'Maria Schneider': '🇺🇸',
+};
+
 // ─── Componente principal ──────────────────────────────────────────
 
 export default function ArrangerCatalog() {
@@ -277,8 +293,8 @@ export default function ArrangerCatalog() {
             <StyledCard>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h3" sx={{ fontSize: '1.25rem', fontWeight: 800 }}>
-                    {arranger.name}
+                  <Typography variant="h3" sx={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <span>{ARRANGER_FLAGS[arranger.name] || '🎼'}</span> {arranger.name}
                   </Typography>
                   <Chip
                     label={`${totalAttributes(arranger)} atributos`}

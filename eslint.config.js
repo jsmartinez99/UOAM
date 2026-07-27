@@ -36,6 +36,7 @@ export default [
         URLSearchParams: 'readonly',
         TextEncoder: 'readonly',
         TextDecoder: 'readonly',
+        Blob: 'readonly',
       },
     },
     plugins: {

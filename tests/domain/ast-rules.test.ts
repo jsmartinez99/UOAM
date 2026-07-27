@@ -3,6 +3,9 @@ import { ContainerNode, NoteNode, ChordNode } from '../../src/domain/ast/nodes';
 import { CounterpointRule } from '../../src/domain/ast/rules/counterpoint';
 import { RhythmRule } from '../../src/domain/ast/rules/rhythm';
 import { TransposeRule } from '../../src/domain/ast/rules/transpose';
+import { FluteLowVoicingRule } from '../../src/domain/ast/rules/flute-low-voicing';
+import { PiccoloLowRegisterRule } from '../../src/domain/ast/rules/piccolo-low-register';
+import { TubaHighVoicingRule } from '../../src/domain/ast/rules/tuba-high-voicing';
 import { RuleEngine } from '../../src/domain/ast/rule-engine';
 
 describe('New AST Rules', () => {
@@ -76,5 +79,65 @@ describe('New AST Rules', () => {
     // NoteNode en el nivel del container sí recibe TransposeRule
     expect(containerResult.children[1]).toBeInstanceOf(NoteNode);
     expect((containerResult.children[1] as NoteNode).pitch).toBe('G4+1');
+  });
+
+  // ── Voicing Rules: Resolución de conflictos de tesitura ──
+
+  describe('Voicing Rules', () => {
+    it('FluteLowVoicingRule debe transponer Low Close-Voicing a Medium', () => {
+      const rule = new FluteLowVoicingRule();
+      const node = new ContainerNode([
+        new NoteNode('Low Close-Voicing (C2-C3)', 1.0),
+        new NoteNode('C4', 0.5),
+      ]);
+      const result = rule.apply(node);
+
+      expect(result).toBeInstanceOf(ContainerNode);
+      const children = (result as ContainerNode).children;
+      expect(children[0]).toBeInstanceOf(NoteNode);
+      expect((children[0] as NoteNode).pitch).toBe('Medium Close-Voicing (C4-C5)');
+      // Notes sin "Low Close-Voicing" se preservan
+      expect((children[1] as NoteNode).pitch).toBe('C4');
+    });
+
+    it('PiccoloLowRegisterRule debe reemplazar "Low" por "High" en pitches', () => {
+      const rule = new PiccoloLowRegisterRule();
+      const node = new ContainerNode([
+        new NoteNode('Low C6', 0.25),
+        new NoteNode('C7', 0.5),
+      ]);
+      const result = rule.apply(node);
+
+      const children = (result as ContainerNode).children;
+      expect((children[0] as NoteNode).pitch).toBe('High C6');
+      // Notes sin "Low" se preservan
+      expect((children[1] as NoteNode).pitch).toBe('C7');
+    });
+
+    it('TubaHighVoicingRule debe transponer High Close-Voicing a Low', () => {
+      const rule = new TubaHighVoicingRule();
+      const node = new ContainerNode([
+        new NoteNode('High Close-Voicing (C5-C6)', 2.0),
+        new NoteNode('C3', 1.0),
+      ]);
+      const result = rule.apply(node);
+
+      const children = (result as ContainerNode).children;
+      expect((children[0] as NoteNode).pitch).toBe('Low Close-Voicing (C2-C3)');
+      // Notes sin "High Close-Voicing" se preservan
+      expect((children[1] as NoteNode).pitch).toBe('C3');
+    });
+
+    it('FluteLowVoicingRule preserva ChordNode sin modificar', () => {
+      const rule = new FluteLowVoicingRule();
+      const chord = new ChordNode([new NoteNode('Low Close-Voicing (C2-C3)', 1.0)]);
+      const node = new ContainerNode([chord, new NoteNode('C4', 0.5)]);
+      const result = rule.apply(node);
+
+      const children = (result as ContainerNode).children;
+      // ChordNode se preserva intacto (la regla solo modifica NoteNode)
+      expect(children[0]).toBe(chord);
+      expect((children[1] as NoteNode).pitch).toBe('C4');
+    });
   });
 });

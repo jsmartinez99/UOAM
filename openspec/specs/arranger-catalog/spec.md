@@ -11,6 +11,10 @@ El sistema SHALL modelar cada arreglista como una entidad de dominio con una fir
 - **WHEN** se crea un arreglista con las 6 dimensiones pobladas con al menos un elemento cada una
 - **THEN** el sistema acepta la entidad y asigna un identificador único
 
+#### Scenario: Incorporación del Blueprint de Carlos Centurión (Folclore Paraguayo - Jazz Fusion)
+- **WHEN** se registra la firma 6D de Carlos Centurión ("Grand Piano", "Quartal Voicings", "Sesquiáltera", "Cascada & McCoy Voicing")
+- **THEN** el sistema indexa la firma en el catálogo vectorial para recomendaciones de arreglos híbridos modal-folclóricos
+
 #### Scenario: Rechazo de arreglista con firma 6D incompleta
 - **WHEN** se intenta crear un arreglista con una o más dimensiones ausentes o vacías
 - **THEN** el sistema rechaza la operación con el error "Dominio Inválido: La firma 6D debe estar completa"

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Especificación Técnica 6D: Carlos Centurión (UOAM)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #002b49;
+      --navy-dark: #021a2d;
+      --accent-gold: #c89211;
+      --accent-gold-light: #e5ab11;
+      --bg-light: #ffffff;
+      --bg-alt: #f0f4f8;
+      --border-color: #cbd5e1;
+      --text-main: #1a202c;
+      --text-muted: #4a5568;
+      --text-light: #718096;
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 18mm 18mm 18mm;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* COVER PAGE (FULL BLEED COVER) */
+    .cover-page {
+      background: linear-gradient(180deg, #021c33 0%, #002b49 100%);
+      margin: -18mm;
+      padding: 60mm 20mm;
+      height: 297mm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #ffffff;
+      page-break-after: always;
+    }
+
+    .cover-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: var(--accent-gold-light);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      line-height: 1.1;
+    }
+
+    .cover-subtitle-box {
+      border-left: 4px solid var(--accent-gold);
+      padding: 8px 16px;
+      text-align: left;
+      margin-bottom: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .cover-subtitle {
+      font-size: 15px;
+      font-weight: 400;
+      color: #e2e8f0;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-divider {
+      width: 120px;
+      height: 2px;
+      background-color: var(--accent-gold);
+      margin: 0 auto 40px auto;
+    }
+
+    .cover-meta {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.8;
+    }
+
+    .cover-meta strong {
+      color: #ffffff;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    /* INNER PAGES */
+    .inner-page-section {
+      page-break-after: always;
+      padding-top: 4px;
+    }
+
+    .inner-page-section:last-child {
+      page-break-after: avoid;
+    }
+
+    /* SECTION HEADER (COMPRACLAVE STYLE: LEFT GOLD BAR) */
+    .section-header-bar {
+      border-left: 5px solid var(--accent-gold);
+      padding-left: 12px;
+      margin-bottom: 18px;
+      margin-top: 6px;
+    }
+
+    .section-header-bar h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-navy);
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+
+    /* SUBSECTION HEADER (COMPRACLAVE STYLE: UNDERLINED GOLD BAR) */
+    .subsection-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 16px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--accent-gold);
+      padding-bottom: 3px;
+      display: inline-block;
+    }
+
+    /* CALLOUT BOX (COMPRACLAVE STYLE) */
+    .callout-box {
+      background-color: var(--bg-alt);
+      border-left: 4px solid var(--primary-navy);
+      padding: 14px 18px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--text-main);
+      margin-bottom: 18px;
+      line-height: 1.55;
+    }
+
+    .callout-box p {
+      margin-bottom: 6px;
+    }
+
+    .callout-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* TABLES (COMPRACLAVE STYLE) */
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 11.5px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .custom-table th {
+      background-color: var(--bg-alt);
+      color: var(--primary-navy);
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .custom-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+      vertical-align: top;
+    }
+
+    .custom-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .td-label {
+      font-weight: 700;
+      color: var(--primary-navy);
+      width: 28%;
+    }
+
+    /* CHECKBOX / CHECK CARDS (COMPRACLAVE STYLE) */
+    .check-card {
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+      background-color: #ffffff;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .check-icon {
+      width: 15px;
+      height: 15px;
+      border: 2px solid var(--primary-navy);
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .check-card-content h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary-navy);
+      margin-bottom: 2px;
+    }
+
+    .check-card-content p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* CODE BOX FOR JSON */
+    .code-card {
+      background-color: var(--navy-dark);
+      border: 1px solid #1e3a5f;
+      border-radius: 5px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    pre {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #e2e8f0;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .j-key { color: #93c5fd; }
+    .j-str { color: #fde047; }
+
+    /* PAGE FOOTER */
+    .page-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9.5px;
+      color: var(--text-light);
+      border-top: 1px solid var(--border-color);
+      padding-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- COVER PAGE (PÁGINA 1) -->
+<div class="cover-page">
+  <h1 class="cover-title">CARLOS CENTURIÓN</h1>
+  
+  <div class="cover-subtitle-box">
+    <div class="cover-subtitle">Blueprint de Arreglista: Fusión del Folclore Paraguayo &amp; Jazz Modal</div>
+  </div>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-meta">
+    <strong>Especificación Técnica 6D</strong>
+    Versión: 2.0 (Baseline)<br>
+    Fecha: 27 de Julio, 2026<br>
+    Clasificación: Documento Estratégico de Ejecución — Motor UOAM
+  </div>
+</div>
+
+<!-- PAGE 2: DEFINICIÓN & ORGANOLOGÍA / ARMONÍA -->
+<div class="inner-page-section">
+  <div class="section-header-bar">
+    <h2>1. Definición Estratégica del Arreglista</h2>
+  </div>
+
+  <div class="callout-box">
+    <p><strong>Carlos Roberto Centurión Santanna (Asunción, Paraguay)</strong> es el pilar fundamental en la codificación y fusión del folclore paraguayo (Polka, Guarania, Kyre'y) con el lenguaje tonal y modal del jazz moderno.</p>
+    <p>Influenciado directamente por la sofisticación armónica de <strong>McCoy Tyner</strong>, el impresionismo de <strong>Bill Evans</strong> y la escuela pionera de <strong>Palito Miranda</strong> en el <em>Asunción Jazz Quintet (AJQ)</em>, su arquitectura de arreglo se distingue por integrar la sonoridad del arpa paraguaya en el piano de cola y sostener una polirritmia continua (6/8 vs 3/4).</p>
+  </div>
+
+  <div class="section-header-bar">
+    <h2>2. Especificación Técnica 6D (Dim. 1 &amp; 2)</h2>
+  </div>
+
+  <div class="subsection-title">Organología (Instrumentación &amp; Exclusiones)</div>
+
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Especificación Técnica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Teclado / Piano (Eje Central)</td>
+        <td>Piano acústico de cola (Yamaha/Steinway) como centro tímbrico y ordenador armónico principal. Uso ocasional de Fender Rhodes para pasajes de fusión.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Sección de Vientos (Quinteto)</td>
+        <td>Saxofón tenor/alto (Asunción Jazz Quintet) + Trombón / Trompeta. Los vientos actúan como solistas o como bloques de respuesta sincopada.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Sección Rítmica</td>
+        <td>Contrabajo acústico (o bajo eléctrico de 5 cuerdas) + Batería con aro/escobillas y percusión paraguaya tradicional (tamboril, bombo).</td>
+      </tr>
+      <tr>
+        <td class="td-label">Sonido de Arpa Adaptado</td>
+        <td>El piano adopta el rol tímbrico del arpa paraguaya de 36 cuerdas, ejecutando cascadas de arpegios veloces en el registro agudo (C5-C7).</td>
+      </tr>
+      <tr>
+        <td class="td-label">Exclusiones Estilísticas</td>
+        <td><strong>LO QUE NUNCA USA:</strong> Sintetizadores estridentes EDM, guitarras de metal distorsionadas, procesamiento digital agresivo o autotune.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="subsection-title">Armonía (Lenguaje, Extensiones &amp; Cadencias)</div>
+
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Especificación Técnica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Lenguaje Armónico</td>
+        <td>Fusión Jazz-Folclore Paraguayo. Armonía modal e impresionista (estilo McCoy Tyner / Bill Evans) sobre la estructura tonal de la polka y la guarania.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Extensiones Preferidas</td>
+        <td>7ªM, 9ª, 11ª (&#9839;11), 13ª. Application de <i>quartal voicings</i> (acordes por cuartas justas) en la mano izquierda del piano.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Progresión Característica</td>
+        <td><code>I6/9 &rarr; VI7alt &rarr; IIm9 &rarr; V7(#9#5) &rarr; I</code> (con bajos caminantes o pedales modales sobre ritmo de 6/8).</td>
+      </tr>
+      <tr>
+        <td class="td-label">Acorde Sello</td>
+        <td><strong>m11</strong> y <strong>maj9(#11)</strong> en cuartas — Disposición de acorde por cuartas en la mano izquierda mientras la derecha ejecuta arpegios de folclore.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Rearmonización de Guaranias</td>
+        <td>Transformación de canciones tradicionales (ej. <i>"Recuerdos de Ypacaraí"</i>) sustituyendo acordes tríadas simples por dominantes secundarios y sustituciones tritonales (<code>subV7</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>UOAM Engine &bull; Documento Estratégico de Ejecución</span>
+    <span>Página 2</span>
+  </div>
+</div>
+
+<!-- PAGE 3: SPEC 6D (DIM 3, 4, 5, 6) -->
+<div class="inner-page-section">
+  <div class="section-header-bar">
+    <h2>3. Especificación Técnica 6D (Dim. 3, 4, 5 &amp; 6)</h2>
+  </div>
+
+  <div class="subsection-title">Contrapunto &amp; Polirritmia</div>
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Especificación Técnica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Tipo de Contrapunto</td>
+        <td>Contrapunto Polirrítmico e Imitativo. Diálogo constante entre la mano derecha del piano y la línea del saxofón/trombón o la voz principal.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Disposición Polirrítmica</td>
+        <td>&bull; <strong>Mano izquierda + Bajo:</strong> marcan la bordona/pulso en <strong>3/4</strong>.<br>&bull; <strong>Mano derecha + Vientos:</strong> ejecutan contracantos en <strong>6/8</strong>.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Movimiento &amp; Paralelismos</td>
+        <td>Movimiento contrario en finales de frase y duplicaciones paralelas a 3<sup>as</sup> o 6<sup>as</sup> evocando el canto a dos voces del folclore paraguayo.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Call &amp; Response</td>
+        <td>El piano "responde" al solo de saxofón con frases de 2 compases en síncopa.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="subsection-title">Textura &amp; Arquitectura de Entradas</div>
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Especificación Técnica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Densidad General</td>
+        <td>Media-Alta. Muy rica en armónicos pianísticos pero con espacio para la respiración de la melodía principal.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Estratificación (3 Capas)</td>
+        <td>1. Melodía principal (Saxo, Trombón o Voz).<br>2. Cascada de arpegios del piano (textura de arpa paraguaya en registro agudo).<br>3. Base rítmica de bajo y batería en pulso de Polka/Kyre'y.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Arquitectura de Entradas</td>
+        <td>Inicio íntimo (piano solo en rubato), seguido por la entrada de la sección rítmica marcando el pulso en 6/8, y posterior entrada de vientos en bloque.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="subsection-title">Rítmica &amp; Gusto (Estética &amp; Filosofía)</div>
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Elemento</th>
+        <th>Especificación Técnica</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Groove Base &amp; Kyre'y</td>
+        <td>Sesquiáltera y Polirritmia Paraguaya (<strong>6/8 vs 3/4</strong>). Corcheas a contratiempo y acentuaciones rítmicas en las posiciones {1, 4} del compás de 6/8.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Figura Rítmica Sello</td>
+        <td>La síncopa del Kyre'y (corchea al aire + negra sincopada en 6/8) acentuada con acordes punzantes del piano.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Marca Personal Sello</td>
+        <td><strong>El "Cascada &amp; McCoy Voicing":</strong> Ejecutar arpegios veloces que imitan el arpa paraguaya y rematarlos inmediatamente con un acorde percusivo por cuartas al estilo McCoy Tyner.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Límite Estilístico</td>
+        <td><strong>Lo que NUNCA haría:</strong> Aplanar el ritmo folclórico a un swing norteamericano en 4/4 estandarizado sin acentuación en 6/8.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Filosofía de Arreglo</td>
+        <td><em>"Elevar la música y el folclore paraguayo al lenguaje armónico universal del jazz sin despojarlo de su identidad y su pulso nativo."</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>UOAM Engine &bull; Documento Estratégico de Ejecución</span>
+    <span>Página 3</span>
+  </div>
+</div>
+
+<!-- PAGE 4: DATABASE MAP & RATIONALE -->
+<div class="inner-page-section">
+  <div class="section-header-bar">
+    <h2>4. Integración en Base de Datos (UOAM Engine)</h2>
+  </div>
+
+  <div class="subsection-title">Definición de Entidad 6D en JSON</div>
+  <div class="code-card">
+    <pre><code>{
+  <span class="j-key">"name"</span>: <span class="j-str">"Carlos Centurión"</span>,
+  <span class="j-key">"dimensions"</span>: {
+    <span class="j-key">"organology"</span>: [<span class="j-str">"Grand Piano"</span>, <span class="j-str">"Tenor Sax"</span>, <span class="j-str">"Trombone"</span>, <span class="j-str">"Upright Bass"</span>, <span class="j-str">"Paraguayan Percussion"</span>],
+    <span class="j-key">"harmony"</span>: [<span class="j-str">"Quartal Voicings"</span>, <span class="j-str">"Maj9(#11)"</span>, <span class="j-str">"Paraguayan Folklore Jazz Fusion"</span>, <span class="j-str">"SubTritone Substitutions"</span>],
+    <span class="j-key">"counterpoint"</span>: [<span class="j-str">"Polyrhythmic Counterpoint"</span>, <span class="j-str">"3rds/6ths Parallel Lines"</span>, <span class="j-str">"Call and Response Fills"</span>],
+    <span class="j-key">"texture"</span>: [<span class="j-str">"Harp-like Piano Cascades"</span>, <span class="j-str">"3-Layer Stratification"</span>, <span class="j-str">"6/8 vs 3/4 Polyrhythmic Texture"</span>],
+    <span class="j-key">"rhythm"</span>: [<span class="j-str">"Sesquiáltera (6/8 vs 3/4)"</span>, <span class="j-str">"Kyre'y Syncopation"</span>, <span class="j-str">"Polka Paraguaya Groove"</span>, <span class="j-str">"Jazz Swing Fusion"</span>],
+    <span class="j-key">"taste"</span>: [<span class="j-str">"Cascada &amp; McCoy Voicing"</span>, <span class="j-str">"Paraguayan Jazz Identity"</span>, <span class="j-str">"Respect for Folcloric Rhythm"</span>]
+  }
+}</code></pre>
+  </div>
+
+  <div class="section-header-bar">
+    <h2>5. Documento de Rationale y Metodología</h2>
+  </div>
+
+  <div class="subsection-title">Fuentes de Evidencia Documental (Sources)</div>
+
+  <div class="check-card">
+    <div class="check-icon"></div>
+    <div class="check-card-content">
+      <h4>Registros Históricos y Discográficos (Portal Guaraní &amp; Archivos de Cultura)</h4>
+      <p>Trayectoria como pianista y arreglista principal del <em>Asunción Jazz Quintet (AJQ)</em> desde finales de los 80 y producciones históricas como <em>"Polka Blues"</em> con el maestro Palito Miranda.</p>
+    </div>
+  </div>
+
+  <div class="check-card">
+    <div class="check-icon"></div>
+    <div class="check-card-content">
+      <h4>Cátedra Pedagógica Académica (CONAMU &amp; UNA)</h4>
+      <p>Revisión de su perfil docente en Piano Popular, Ensamble y Ritmo/Forma de la Música Paraguaya, confirmando la codificación formal de las estructuras folclóricas en la academia.</p>
+    </div>
+  </div>
+
+  <div class="check-card">
+    <div class="check-icon"></div>
+    <div class="check-card-content">
+      <h4>Hemeroteca de Crítica Musical (ABC Color, Última Hora, Formosa Diario)</h4>
+      <p>Reseñas de conciertos, análisis técnico en directo y testimonios de co-miembros del ensamble como Riolo Alvarenga y Remigio Pereira.</p>
+    </div>
+  </div>
+
+  <div class="subsection-title">Matriz de Justificación Técnica</div>
+
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th style="width: 20%;">Dimensión 6D</th>
+        <th style="width: 25%;">Elemento Asignado</th>
+        <th>Justificación de Evidencia Musical</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="td-label">Organología</td>
+        <td>Piano como Arpa Paraguaya</td>
+        <td>Al no haber arpa en el quinteto, el piano de Centurión imita las cascadas de arpegios tradicionales en los registros agudos (C5-C7).</td>
+      </tr>
+      <tr>
+        <td class="td-label">Armonía</td>
+        <td>Voicings por Cuartas</td>
+        <td>Influencia de McCoy Tyner observada en su discografía con el AJQ; sustituye tríadas simples por pilas de cuartas justas.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Contrapunto</td>
+        <td>Polirritmia 6/8 vs 3/4</td>
+        <td>La mano derecha ejecuta síncopa en 6/8 mientras la izquierda marca 3/4, creando un contrapunto polirrítmico interno.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Rítmica</td>
+        <td>Síncopa Kyre'y en 6/8</td>
+        <td>El patrón folclórico del Kyre'y es el motor rítmico que guía los ataques sincopados de la sección de vientos.</td>
+      </tr>
+      <tr>
+        <td class="td-label">Gusto</td>
+        <td>"Cascada &amp; McCoy"</td>
+        <td>Transición característica: arpegiado lírico tradicional seguido inmediatamente por un acorde percusivo por cuartas de jazz.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>UOAM Engine &bull; Documento Estratégico de Ejecución</span>
+    <span>Página 4</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ArrangerCatalog from './pages/ArrangerCatalog';
 import HybridizationTool from './pages/HybridizationTool';
 import AnalysisTool from './pages/AnalysisTool';
+import StandaloneArrangerPage from './pages/StandaloneArrangerPage';
 import Login from './pages/Login';
 import { AuthProvider } from './context/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
@@ -113,6 +114,7 @@ export default function App() {
               <Route element={<PrivateRoute />}>
                 <Route path="/catalog" element={<ArrangerCatalog />} />
                 <Route path="/hybridize" element={<HybridizationTool />} />
+                <Route path="/generate" element={<StandaloneArrangerPage />} />
                 <Route path="/analyze" element={<AnalysisTool />} />
               </Route>
             </Routes>

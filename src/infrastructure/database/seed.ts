@@ -92,6 +92,83 @@ const ARRANGER_PROFILES: Array<{ name: string; dimensions: Record<string, string
       taste: ['Ogerman Swell', 'Light Touch', 'Jobim Orchestration'],
     },
   },
+  {
+    name: 'Carlos Centurión',
+    dimensions: {
+      organology: ['Grand Piano', 'Tenor Sax', 'Trombone', 'Upright Bass', 'Paraguayan Percussion'],
+      harmony: ['Quartal Voicings', 'Maj9(#11)', 'Paraguayan Folklore Jazz Fusion', 'SubTritone Substitutions'],
+      counterpoint: ['Polyrhythmic Counterpoint', '3rds/6ths Parallel Lines', 'Call and Response Fills'],
+      texture: ['Harp-like Piano Cascades', '3-Layer Stratification', '6/8 vs 3/4 Polyrhythmic Texture'],
+      rhythm: ['Sesquiáltera (6/8 vs 3/4)', 'Kyre\'y Syncopation', 'Polka Paraguaya Groove', 'Jazz Swing Fusion'],
+      taste: ['Cascada & McCoy Voicing', 'Paraguayan Jazz Identity', 'Respect for Folcloric Rhythm'],
+    },
+  },
+  {
+    name: 'Nelson Riddle',
+    dimensions: {
+      organology: ['Violins', 'Saxes', 'Brass Section', 'Flutes'],
+      harmony: ['Added 6th chords', 'Major 7ths', 'Smooth Chromatic Steps'],
+      counterpoint: ['3-4 Voice Independent Saxes', 'Call and Response'],
+      texture: ['Riddle Lift', 'Lush Strings', 'Dense Saxes'],
+      rhythm: ['Relaxed Swing', 'Riddle Kick', 'Walking Bass'],
+      taste: ['Riddle Lift', 'Frank Sinatra Sound', 'Classic Capitol Style'],
+    },
+  },
+  {
+    name: 'Henry Mancini',
+    dimensions: {
+      organology: ['Flute', 'Harmon Muted Trumpet', 'Strings', 'Percussion'],
+      harmony: ['Tonal Middle of the Road', 'Altered Dominants', 'Modal Touches'],
+      counterpoint: ['Subtle Woodwind Answers', 'Lyrical Counter-melodies'],
+      texture: ['Transparent Density', 'Spacious Intervals', 'Movie Themes'],
+      rhythm: ['Bossa Nova', 'Light Swing', 'Samba'],
+      taste: ['Pink Panther Vibe', 'Moon River Lyricism', 'Harmon Mute'],
+    },
+  },
+  {
+    name: 'Sammy Nestico',
+    dimensions: {
+      organology: ['Count Basie Big Band', 'Brass Section', 'Saxes', 'Rhythm Section'],
+      harmony: ['Clean Extended Jazz Harmony', '9ths and 13ths', 'Functional Cadences'],
+      counterpoint: ['Sectional Homophony', 'Clean Brass Attacks'],
+      texture: ['Symmetrical Brass', 'Crisp Tutti Sections'],
+      rhythm: ['Basie Swing', 'Driving Pulse', 'Hi-Hat 2 and 4'],
+      taste: ['Basie Ending', 'Nestico Simplicity', 'Straight Ahead Swing'],
+    },
+  },
+  {
+    name: 'Thad Jones',
+    dimensions: {
+      organology: ['Big Band', 'Flugelhorn', 'Dense Brass', 'Saxes'],
+      harmony: ['Dissonant Voicings', 'Altered Chords', 'Cluster Harmonies'],
+      counterpoint: ['Complex Polyphonic Lines', 'Off-beat Interjections'],
+      texture: ['Dense and Complex', 'Unusual Voicing Spacing'],
+      rhythm: ['Off-beat Syncopation', 'Modern Big Band Groove'],
+      taste: ['Thad Jones Voicing', 'Unconventional Accents', 'Modern Jazz'],
+    },
+  },
+  {
+    name: 'Clare Fischer',
+    dimensions: {
+      organology: ['Electric Piano', 'Vocal Ensemble', 'Latin Percussion', 'Strings'],
+      harmony: ['Dense Harmonic Voicings', 'Complex Alterations', 'Reharmonization'],
+      counterpoint: ['Vocal Counterpoint', 'Inner Line Movement'],
+      texture: ['Choral Density', 'Harmonic Thickness'],
+      rhythm: ['Latin Jazz', 'Bossa Nova', 'Complex Micro-timing'],
+      taste: ['Fischer Harmonies', 'Hi-Lo\'s Vocal Style', 'Latin Fusion'],
+    },
+  },
+  {
+    name: 'Maria Schneider',
+    dimensions: {
+      organology: ['Large Jazz Orchestra', 'Accordion', 'Soprano Sax', 'Strings'],
+      harmony: ['Impressionistic Modal', 'Extended Tonalities', 'Coloristic Harmony'],
+      counterpoint: ['Polyphonic Weaving', 'Long Evolving Lines'],
+      texture: ['Expansive Acoustic Textures', 'Continuous Growth', 'Tone Poems'],
+      rhythm: ['Fluid Meter', 'Rubato Waves', 'Subtle Pulse'],
+      taste: ['Schneider Color', 'Ethereal Waves', 'Gil Evans Heritage'],
+    },
+  },
 ];
 
 export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
@@ -108,8 +185,6 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
   // ── Demo users (idempotent via ON CONFLICT) ──
   for (const demo of DEMO_USERS) {
     const hashedPassword = await bcrypt.hash(demo.password, 12);
-    // Use raw upsert for atomicity — avoids race between findOneBy and save.
-    // gen_random_uuid() is built into Postgres 13+ (no extension needed).
     await AppDataSource.manager.query(
       `INSERT INTO users (id, email, "hashedPassword", role, "createdAt")
        VALUES (gen_random_uuid(), $1, $2, $3, NOW())
@@ -121,19 +196,17 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
     logger.info(`[seed] Upserted demo user ${demo.email} (${demo.role})`);
   }
 
-  // ── Arranger profiles ──
-  const existingCount = await arrangerRepo.count();
-  if (existingCount === 0) {
-    for (const p of ARRANGER_PROFILES) {
+  // ── Arranger profiles (Idempotent by name) ──
+  for (const p of ARRANGER_PROFILES) {
+    const existing = await arrangerRepo.findOne({ where: { name: p.name } });
+    if (!existing) {
       const entity = arrangerRepo.create({
         name: p.name,
         dimensions: p.dimensions,
       });
       await arrangerRepo.save(entity);
+      logger.info(`[seed] Seeded profile: ${p.name}`);
     }
-    logger.info(`[seed] Seeded ${ARRANGER_PROFILES.length} arranger profiles`);
-  } else {
-    logger.info(`[seed] Skipping arranger seed (${existingCount} profiles already present)`);
   }
 
   // ── Qdrant indexing ──

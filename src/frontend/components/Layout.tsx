@@ -80,6 +80,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Button>
                   <Button 
                     color="inherit" 
+                    onClick={() => navigate('/generate')}
+                    sx={{ 
+                      color: isActive('/generate') ? 'primary.main' : 'text.secondary',
+                      borderBottom: isActive('/generate') ? '2px solid' : 'none',
+                      borderColor: 'primary.main',
+                      borderRadius: 0,
+                      px: 2,
+                      py: 1,
+                      height: 48
+                    }}
+                  >
+                    Generar 5D
+                  </Button>
+                  <Button 
+                    color="inherit" 
                     onClick={() => navigate('/analyze')}
                     sx={{ 
                       color: isActive('/analyze') ? 'primary.main' : 'text.secondary',

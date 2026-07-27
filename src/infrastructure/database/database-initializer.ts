@@ -11,11 +11,20 @@ import { logger } from '../logger.js';
  * ensureInitialized() / ensureSeeded() esperan a que termine.
  */
 async function initializeWithRetry(retries = 10, delayMs = 2000): Promise<void> {
+  if (AppDataSource.isInitialized) {
+    return;
+  }
   for (let i = 0; i < retries; i++) {
     try {
+      if (AppDataSource.isInitialized) {
+        return;
+      }
       await AppDataSource.initialize();
       return;
     } catch (error) {
+      if (AppDataSource.isInitialized) {
+        return;
+      }
       if (i === retries - 1) {
         throw error;
       }

@@ -95,6 +95,27 @@ export const apiService = {
     return response.data as ArrangerProfile;
   },
 
+  // ── Generación autónoma de arreglos en 5 secciones ──
+
+  async generateArrangement(options: {
+    title?: string;
+    keyCenter?: string;
+    tempoBpm?: number;
+    timeSignature?: string;
+    profileId?: string;
+    dimensionsOverride?: Record<string, string[]>;
+  }): Promise<any> {
+    const response = await api.post('/arrangements/generate', options);
+    return response.data;
+  },
+
+  async exportMusicXML(arrangement: any): Promise<Blob> {
+    const response = await api.post('/arrangements/export/xml', arrangement, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   // ── Autenticación ──
 
    async register(

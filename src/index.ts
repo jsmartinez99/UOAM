@@ -75,6 +75,8 @@ async function bootstrap(): Promise<void> {
   app.post('/api/v1/auth/register', controller.registerUser);
   app.post('/api/v1/auth/login', controller.loginUser);
   app.post('/api/v1/upload', auth, upload.single('musicFile'), controller.uploadArrangement);
+  app.post('/api/v1/arrangements/generate', auth, controller.generateStandaloneArrangement);
+  app.post('/api/v1/arrangements/export/xml', auth, controller.exportMusicXML);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
   app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
