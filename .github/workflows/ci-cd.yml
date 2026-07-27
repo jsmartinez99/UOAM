@@ -71,13 +71,13 @@ jobs:
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
       - name: Configure Kubernetes
-        uses: azure/k8s-set-context@4334b489abaae3336d9b19d15d53ad72412ec412
+        uses: azure/k8s-set-context@8698eba2499e9012f0d5085f8798077cce4bc526
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.K8S_CONFIG }}
 
       - name: Install Helm
-        uses: azure/setup-helm@59b1c81c6280f5abebb1fb1bc585696daa7dfb42
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
         with:
           version: v3.14.0
 

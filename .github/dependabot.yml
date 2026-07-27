@@ -11,6 +11,9 @@ updates:
     labels:
       - "dependencies"
       - "npm"
+    ignore:
+      - dependency-name: "playwright-mcp"
+        comment: "Tooling dependency not used in production; pinned to 0.0.10 for stability."
 
   - package-ecosystem: "github-actions"
     directory: "/"
