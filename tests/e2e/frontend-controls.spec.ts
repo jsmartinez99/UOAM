@@ -14,14 +14,18 @@ import { test, expect } from '@playwright/test';
 test.describe('Controles Automatizados E2E del Frontend UOAM', () => {
   const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
-  test.beforeEach(async ({ page }) => {
-    // Iniciar sesión automática con la cuenta de demo
-    await page.goto(`${BASE_URL}/login`);
-    const demoButton = page.getByRole('button', { name: /Entrar como Demo Admin/i });
-    if (await demoButton.isVisible()) {
-      await demoButton.click();
-      await page.waitForURL(`${BASE_URL}/catalog`);
-    }
+  test.beforeEach(async ({ page, context }) => {
+    // Login via API para evitar dependencia de la UI de login.
+    // Setear token y user en localStorage antes de cargar la app.
+    const loginRes = await page.request.post(`${BASE_URL}/api/v1/auth/login`, {
+      data: { email: 'admin@uoam.com', password: 'Admin@1234' },
+    });
+    const { token, user } = await loginRes.json();
+
+    await context.addInitScript(({ token, user }) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+    }, { token, user });
   });
 
   // ─── CONTROL 1: CATÁLOGO DE ARREGLISTAS (13D) ──────────────────────
@@ -105,5 +109,61 @@ test.describe('Controles Automatizados E2E del Frontend UOAM', () => {
     // Validar presencia del panel de ingesta de partituras/audio
     await expect(page.getByText(/Ingesta de Audio y Partituras/i)).toBeVisible();
     await expect(page.getByText(/Haz clic para seleccionar un archivo/i)).toBeVisible();
+  });
+
+  // ─── CONTROL 5: AUTENTICACIÓN Y REDIRECCIONES ─────────────────────
+  test.describe('Auth Integration: PrivateRoute redirect to /login', () => {
+    test('Acceso a /hybridize sin JWT debe redirigir a /login', async ({ page, context }) => {
+      // Limpiar storage para garantizar sesión limpia
+      await context.clearCookies();
+      await context.addInitScript(() => localStorage.clear());
+
+      await page.goto(`${BASE_URL}/hybridize`);
+
+      // PrivateRoute debe redirigir a /login
+      await page.waitForURL(/\/login$/, { timeout: 5000 });
+      expect(page.url()).toMatch(/\/login$/);
+    });
+
+    test('Acceso a /analyze sin JWT debe redirigir a /login', async ({ page, context }) => {
+      await context.clearCookies();
+      await context.addInitScript(() => localStorage.clear());
+
+      await page.goto(`${BASE_URL}/analyze`);
+
+      await page.waitForURL(/\/login$/, { timeout: 5000 });
+      expect(page.url()).toMatch(/\/login$/);
+    });
+
+    test('Acceso a /generate sin JWT debe redirigir a /login', async ({ page, context }) => {
+      await context.clearCookies();
+      await context.addInitScript(() => localStorage.clear());
+
+      await page.goto(`${BASE_URL}/generate`);
+
+      await page.waitForURL(/\/login$/, { timeout: 5000 });
+      expect(page.url()).toMatch(/\/login$/);
+    });
+
+    test('Acceso a /catalog sin JWT también redirige a /login (ruta protegida)', async ({ page, context }) => {
+      await context.clearCookies();
+      await context.addInitScript(() => localStorage.clear());
+
+      await page.goto(`${BASE_URL}/catalog`);
+
+      // /catalog está bajo PrivateRoute: debe redirigir a /login
+      await page.waitForURL(/\/login$/, { timeout: 5000 });
+      expect(page.url()).toMatch(/\/login$/);
+    });
+
+    test('Acceso a / con sesión válida debe permanecer en la app', async ({ page }) => {
+      // beforeEach ya hace login via API y setea localStorage
+      // Primero navegamos a una ruta que monta el AuthProvider y carga user
+      await page.goto(`${BASE_URL}/catalog`);
+      // Luego verificamos que el Layout muestra el email (Header global)
+      await expect(page.getByText(/admin@uoam\.com/i)).toBeVisible({ timeout: 10000 });
+      // Y que la URL no fue redirigida a /login
+      expect(page.url()).toMatch(/\/catalog$/);
+    });
   });
 });
