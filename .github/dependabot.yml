@@ -14,6 +14,10 @@ updates:
     ignore:
       - dependency-name: "playwright-mcp"
         comment: "Tooling dependency not used in production; pinned to 0.0.10 for stability."
+      - dependency-name: "typescript"
+        versions:
+          - ">= 7.0.0"
+        comment: "@typescript-eslint 8.x does not support TypeScript 7 yet (tracking: typescript-eslint/typescript-eslint#10940). Re-enable when support lands."
 
   - package-ecosystem: "github-actions"
     directory: "/"
