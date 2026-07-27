@@ -144,8 +144,13 @@ export function createArrangerController(
             take: limitNum,
           });
 
+          const sanitizedData = data.map((a) => ({
+            ...a,
+            dimensions: typeof a.dimensions === 'string' ? JSON.parse(a.dimensions) : a.dimensions,
+          }));
+
           return res.json({
-            data,
+            data: sanitizedData,
             total,
             page: pageNum,
             limit: limitNum,
@@ -154,7 +159,11 @@ export function createArrangerController(
         }
 
         const arrangers = await repo.find();
-        return res.json(arrangers);
+        const sanitizedArrangers = arrangers.map((a) => ({
+          ...a,
+          dimensions: typeof a.dimensions === 'string' ? JSON.parse(a.dimensions) : a.dimensions,
+        }));
+        return res.json(sanitizedArrangers);
       } catch (error: unknown) {
         const err = error as Error;
         return res.status(500).json({ error: err.message });
@@ -242,7 +251,10 @@ export function createArrangerController(
          });
        }
 
-        const profiles = profilesData.map((p: ArrangerProfileEntity) => new ArrangerProfile(p.name, p.dimensions, p.id));
+         const profiles = profilesData.map((p: ArrangerProfileEntity) => {
+           const dims = typeof p.dimensions === 'string' ? JSON.parse(p.dimensions) : p.dimensions;
+           return new ArrangerProfile(p.name, dims, p.id);
+         });
 
        const result = hybridEngine.mergeFullSignatures(
          profiles[0].dimensions,

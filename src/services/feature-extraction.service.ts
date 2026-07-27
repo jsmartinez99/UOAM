@@ -1,17 +1,25 @@
 import { Dimensions6D } from '../domain/arranger-profile.js';
 
+const DIMENSION_KEYS: Array<keyof Dimensions6D> = [
+  'organology',
+  'harmony',
+  'counterpoint',
+  'texture',
+  'rhythm',
+  'taste',
+];
+
 export class FeatureExtractionService {
   extract(rawFeatures: Record<string, unknown>): Dimensions6D {
-    // TODO: Implement actual feature extraction from rawFeatures
-    // For now, return default dimensions
-    const defaultDimensions: Dimensions6D = {
-      organology: rawFeatures.organology as string[] || ['Extracted Instrument'],
-      harmony: rawFeatures.harmony as string[] || ['Extracted Harmony'],
-      counterpoint: rawFeatures.counterpoint as string[] || ['Extracted Counterpoint'],
-      texture: rawFeatures.texture as string[] || ['Extracted Texture'],
-      rhythm: rawFeatures.rhythm as string[] || ['Extracted Rhythm'],
-      taste: rawFeatures.taste as string[] || ['Extracted Taste'],
-    };
-    return defaultDimensions;
+    const result = {} as Dimensions6D;
+    for (const key of DIMENSION_KEYS) {
+      const value = rawFeatures[key];
+      if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+        result[key] = value as string[];
+      } else {
+        result[key] = [`Extracted ${key.charAt(0).toUpperCase() + key.slice(1)}`];
+      }
+    }
+    return result;
   }
 }

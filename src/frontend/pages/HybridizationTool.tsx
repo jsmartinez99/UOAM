@@ -75,7 +75,8 @@ export default function HybridizationTool() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const data = await apiService.getArrangers();
+        const res = await apiService.getArrangers();
+        const data = Array.isArray(res) ? res : res?.data || [];
         setAvailableProfiles(data);
 
         // Pre-select profile if passed via URL params

@@ -171,6 +171,8 @@ const ARRANGER_PROFILES: Array<{ name: string; dimensions: Record<string, string
   },
 ];
 
+import { UserEntity } from './entities/user.entity.js';
+
 export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
   try {
     if (!AppDataSource.isInitialized) {
@@ -181,19 +183,25 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
   }
 
   const arrangerRepo = AppDataSource.getRepository(ArrangerProfileEntity);
+  const userRepo = AppDataSource.getRepository(UserEntity);
 
   // ── Demo users (idempotent via ON CONFLICT) ──
   for (const demo of DEMO_USERS) {
     const hashedPassword = await bcrypt.hash(demo.password, 12);
-    await AppDataSource.manager.query(
-      `INSERT INTO users (id, email, "hashedPassword", role, "createdAt")
-       VALUES (gen_random_uuid(), $1, $2, $3, NOW())
-       ON CONFLICT (email) DO UPDATE
-         SET "hashedPassword" = EXCLUDED."hashedPassword"
-         WHERE users."hashedPassword" IS DISTINCT FROM EXCLUDED."hashedPassword"`,
-      [demo.email, hashedPassword, demo.role],
-    );
-    logger.info(`[seed] Upserted demo user ${demo.email} (${demo.role})`);
+    const existing = await userRepo.findOne({ where: { email: demo.email } });
+    if (!existing) {
+      const newUser = userRepo.create({
+        email: demo.email,
+        hashedPassword,
+        role: demo.role,
+      });
+      await userRepo.save(newUser);
+      logger.info(`[seed] Created demo user ${demo.email} (${demo.role})`);
+    } else {
+      existing.hashedPassword = hashedPassword;
+      await userRepo.save(existing);
+      logger.info(`[seed] Updated demo user ${demo.email}`);
+    }
   }
 
   // ── Arranger profiles (Idempotent by name) ──

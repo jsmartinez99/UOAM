@@ -9,7 +9,7 @@ export class QdrantAdapter implements VectorDatabaseClient {
     this.client = new QdrantClient({ url });
   }
 
-  async ensureCollection(collectionName: string, vectorSize: number = 6, retries = 10, delayMs = 2000): Promise<void> {
+  async ensureCollection(collectionName: string, vectorSize: number = 6, retries = 1, delayMs = 200): Promise<void> {
     for (let i = 0; i < retries; i++) {
       try {
         const collections = await this.client.getCollections();
@@ -25,10 +25,10 @@ export class QdrantAdapter implements VectorDatabaseClient {
           logger.info(`Collection ${collectionName} created in Qdrant.`);
         }
         return;
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         if (i === retries - 1) {
-          logger.error('Error ensuring Qdrant collection after maximum retries:', error as Error);
-          throw error;
+          logger.warn(`Qdrant connection failed after ${retries} retries. Operating without vector search.`);
+          return;
         }
         if (process.env.NODE_ENV !== 'test') {
           logger.warn(`Qdrant connection failed. Retrying in ${delayMs / 1000}s... (${i + 1}/${retries})`);

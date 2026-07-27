@@ -9,6 +9,6 @@ export class ArrangerProfileEntity {
   @Column({ type: 'varchar' })
   name!: string;
 
-  @Column('jsonb')
+  @Column('simple-json')
   dimensions!: Dimensions6D;
 }

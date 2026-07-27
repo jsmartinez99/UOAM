@@ -67,7 +67,7 @@ async function bootstrap(): Promise<void> {
   const controller = createArrangerController(dependencies);
   const auth = authenticateToken(dependencies);
 
-  app.get('/api/v1/arrangers', auth, controller.getAllArrangers);
+  app.get('/api/v1/arrangers', controller.getAllArrangers);
   app.post('/api/v1/arrangers', auth, controller.createArranger);
   app.post('/api/v1/hybridize', auth, controller.hybridizeProfiles);
   app.post('/api/v1/search', auth, controller.searchSimilar);

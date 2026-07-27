@@ -141,12 +141,31 @@ export default function Login() {
           </Button>
 
           <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              ¿No tienes cuenta? Regístrate en el sistema o usa las credenciales de demo:
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              Credenciales de demo predeterminadas:
             </Typography>
-            <Typography variant="body2" sx={{ mt: 1, color: 'primary.main', fontWeight: 600 }}>
-              admin@uoam.com / Admin@1234
-            </Typography>
+            <Button
+              fullWidth
+              variant="outlined"
+              color="secondary"
+              onClick={async () => {
+                setEmail('admin@uoam.com');
+                setPassword('Admin@1234');
+                try {
+                  setLoading(true);
+                  const data = await apiService.login('admin@uoam.com', 'Admin@1234');
+                  login(data.token, data.user);
+                  navigate('/catalog');
+                } catch (e: any) {
+                  setError('Error en login demo: ' + (e.message || ''));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              sx={{ fontWeight: 700 }}
+            >
+              Entrar como Demo Admin (1-Clic)
+            </Button>
           </Box>
         </Paper>
       </Box>

@@ -26,9 +26,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   },
@@ -40,10 +43,16 @@ export const apiService = {
   // ── Arreglistas ──
 
   async getArrangers(page?: number, limit?: number): Promise<any> {
+    if (page !== undefined || limit !== undefined) {
+      const response = await api.get('/arrangers', {
+        params: { page, limit },
+      });
+      return response.data;
+    }
     const response = await api.get('/arrangers', {
-      params: { page, limit },
+      params: { page: 1, limit: 100 },
     });
-    return response.data;
+    return Array.isArray(response.data) ? response.data : response.data?.data || [];
   },
 
   async createArranger(

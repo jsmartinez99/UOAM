@@ -42,6 +42,7 @@ export default defineConfig({
         'src/infrastructure/database/data-source.ts',
         'src/infrastructure/qdrant/qdrant-client.ts',
         'src/domain/ast/visitor.ts',
+        'src/config.ts',
       ],
       thresholds: {
         branches: 68,

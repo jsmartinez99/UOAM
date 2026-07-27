@@ -92,7 +92,7 @@ export default function AnalysisTool() {
     setLoading(true);
     apiService
       .getArrangers()
-      .then((data: any) => setArrangers(data))
+      .then((res: any) => setArrangers(Array.isArray(res) ? res : res?.data || []))
       .catch(() => setError('Error cargando arreglistas'))
       .finally(() => setLoading(false));
   }, []);

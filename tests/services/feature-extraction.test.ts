@@ -62,4 +62,39 @@ describe('FeatureExtractionService', () => {
     expect(signature.rhythm).toBeInstanceOf(Array);
     expect(signature.taste).toBeInstanceOf(Array);
   });
+
+  it('debe usar valores por defecto cuando una dimensión no es un array de strings', () => {
+    const service = new FeatureExtractionService();
+    const rawFeatures = {
+      organology: 'not-an-array',
+      harmony: [123, 456],
+      counterpoint: null,
+      texture: undefined,
+      rhythm: ['valid'],
+      taste: { not: 'an array' },
+    };
+
+    const signature = service.extract(rawFeatures);
+
+    // Dimensiones inválidas deben recibir el default
+    expect(signature.organology).toEqual(['Extracted Organology']);
+    expect(signature.harmony).toEqual(['Extracted Harmony']);
+    expect(signature.counterpoint).toEqual(['Extracted Counterpoint']);
+    expect(signature.texture).toEqual(['Extracted Texture']);
+    // Solo rhythm era válido
+    expect(signature.rhythm).toEqual(['valid']);
+    expect(signature.taste).toEqual(['Extracted Taste']);
+  });
+
+  it('debe rechazar arrays con elementos no-string', () => {
+    const service = new FeatureExtractionService();
+    const rawFeatures = {
+      organology: ['Flute', 42, 'Violin'],
+    };
+
+    const signature = service.extract(rawFeatures);
+
+    // Array mixto (string + number) debe caer al default
+    expect(signature.organology).toEqual(['Extracted Organology']);
+  });
 });
