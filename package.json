@@ -7,6 +7,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "npx tsx scripts/run-e2e-audit.ts",
     "lint": "eslint src/ tests/ --ext .ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc && vite build",

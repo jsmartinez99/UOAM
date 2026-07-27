@@ -39,20 +39,55 @@ api.interceptors.response.use(
 
 // ─── Servicios de API ─────────────────────────────────────────────
 
+export interface Arranger {
+  id: string;
+  name: string;
+  dimensions: Record<string, string[]>;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  role: 'STANDARD' | 'ARRANGER' | 'ADMIN';
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export interface HybridizeRequest {
+  sourceIds: string[];
+  weights?: number[];
+}
+
+export interface HybridizeResult {
+  dimensions: Record<string, string[]>;
+  conflicts: string[];
+  resolutionLog: string[];
+}
+
+export interface GenerateArrangementRequest {
+  title?: string;
+  keyCenter?: string;
+  tempoBpm?: number;
+  timeSignature?: string;
+  profileId?: string;
+  dimensionsOverride?: Record<string, string[]>;
+}
+
 export const apiService = {
   // ── Arreglistas ──
 
-  async getArrangers(page?: number, limit?: number): Promise<any> {
+  async getArrangers(page?: number, limit?: number): Promise<{ arrangers: Arranger[]; total: number }> {
     if (page !== undefined || limit !== undefined) {
       const response = await api.get('/arrangers', {
         params: { page, limit },
       });
       return response.data;
     }
-    const response = await api.get('/arrangers', {
-      params: { page: 1, limit: 100 },
-    });
-    return Array.isArray(response.data) ? response.data : response.data?.data || [];
+    const response = await api.get('/arrangers');
+    return response.data;
   },
 
   async createArranger(
@@ -113,12 +148,12 @@ export const apiService = {
     timeSignature?: string;
     profileId?: string;
     dimensionsOverride?: Record<string, string[]>;
-  }): Promise<any> {
+  }): Promise<Record<string, unknown>> {
     const response = await api.post('/arrangements/generate', options);
     return response.data;
   },
 
-  async exportMusicXML(arrangement: any): Promise<Blob> {
+  async exportMusicXML(arrangement: Record<string, unknown>): Promise<Blob> {
     const response = await api.post('/arrangements/export/xml', arrangement, {
       responseType: 'blob',
     });
@@ -131,13 +166,13 @@ export const apiService = {
      email: string,
      password: string,
      role: 'STANDARD' | 'ARRANGER' | 'ADMIN' = 'STANDARD',
-   ): Promise<{ id: string; email: string; role: string }> {
+   ): Promise<User> {
      const response = await api.post('/auth/register', { email, password, role });
-     return response.data as { id: string; email: string; role: string };
+     return response.data as User;
    },
 
-  async login(email: string, password: string): Promise<{ token: string; user: { id: string; email: string; role: string } }> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     const response = await api.post('/auth/login', { email, password });
-    return response.data as { token: string; user: { id: string; email: string; role: string } };
+    return response.data as AuthResponse;
   },
 };

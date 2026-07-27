@@ -1,7 +1,21 @@
 import { readFileSync } from 'fs';
-import { SymbolicIngestor, IngestorResult } from './ingestor.interface.js';
+import { SymbolicIngestor, IngestorResult } from './ingestor.interface';
 import { XMLParser } from 'fast-xml-parser';
 import { Midi } from '@tonejs/midi';
+import type { TempoEvent, TimeSignatureEvent } from '@tonejs/midi/dist/Header';
+
+// @tonejs/midi exports TempoEvent and TimeSignatureEvent from Header, but
+// PitchBend and ControlChange are not exported. Define them locally.
+interface MidiControlChange {
+  number: number;
+  value: number;
+  time: number;
+}
+
+interface MidiPitchBend {
+  value: number;
+  time: number;
+}
 
 export class SymbolicIngestorImpl implements SymbolicIngestor {
   private readonly parser = new XMLParser({
@@ -45,12 +59,11 @@ export class SymbolicIngestorImpl implements SymbolicIngestor {
       format: 'midi',
       duration: midi.duration,
       ppq: midi.header.ppq,
-      timeSignatures: midi.header.timeSignatures.map((ts: any) => ({
+      timeSignatures: midi.header.timeSignatures.map((ts: TimeSignatureEvent) => ({
         ticks: ts.ticks,
-        numerator: ts.numerator,
-        denominator: ts.denominator,
+        timeSignature: ts.timeSignature,
       })),
-      tempos: midi.header.tempos.map((t: any) => ({
+      tempos: midi.header.tempos.map((t: TempoEvent) => ({
         ticks: t.ticks,
         bpm: t.bpm,
       })),
@@ -66,17 +79,17 @@ export class SymbolicIngestorImpl implements SymbolicIngestor {
           velocity: note.velocity,
         })),
         controlChanges: Array.isArray(track.controlChanges)
-          ? track.controlChanges.map((cc: any) => ({
+          ? (track.controlChanges as MidiControlChange[]).map((cc) => ({
               number: cc.number,
               value: cc.value,
               time: cc.time,
             }))
-          : Object.values(track.controlChanges as any).map((cc: any) => ({
+          : Object.values(track.controlChanges as unknown as Record<string, MidiControlChange>).map((cc) => ({
               number: cc.number,
               value: cc.value,
               time: cc.time,
             })),
-        pitchBends: track.pitchBends.map((pb: any) => ({
+        pitchBends: track.pitchBends.map((pb: MidiPitchBend) => ({
           value: pb.value,
           time: pb.time,
         })),

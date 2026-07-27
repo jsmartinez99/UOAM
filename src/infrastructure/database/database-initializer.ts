@@ -29,7 +29,7 @@ async function initializeWithRetry(retries = 10, delayMs = 2000): Promise<void> 
         throw error;
       }
       if (process.env.NODE_ENV !== 'test') {
-        console.warn(`Database connection failed. Retrying in ${delayMs / 1000}s... (${i + 1}/${retries})`);
+        logger.warn(`Database connection failed. Retrying in ${delayMs / 1000}s... (${i + 1}/${retries})`);
       }
       await new Promise(resolve => setTimeout(resolve, delayMs));
     }
@@ -47,12 +47,12 @@ class DatabaseInitializer {
         await AppDataSource.runMigrations();
         this.isInitialized = true;
         if (process.env.NODE_ENV !== 'test') {
-          console.log('Database initialized successfully and migrations run');
+          logger.info('Database initialized successfully and migrations run');
         }
       })
       .catch((error) => {
         if (process.env.NODE_ENV !== 'test') {
-          console.error('Error initializing database:', error);
+          logger.error('Error initializing database', error as Error);
         }
         throw error;
       });
