@@ -27,16 +27,19 @@ describe('OllamaLLMClient', () => {
       process.env.OLLAMA_URL = 'http://custom:1234';
       process.env.OLLAMA_MODEL = 'llama3.2:3b';
       process.env.LLM_TIMEOUT_MS = '30000';
+      process.env.OLLAMA_API_KEY = 'test-token';
       const config = loadOllamaConfig();
       expect(config.baseUrl).toBe('http://custom:1234');
       expect(config.model).toBe('llama3.2:3b');
       expect(config.timeoutMs).toBe(30000);
+      expect(config.apiKey).toBe('test-token');
       process.env = originalEnv;
     });
 
     it('debe permitir overrides explícitos', () => {
-      const config = loadOllamaConfig({ baseUrl: 'http://override:9999' });
+      const config = loadOllamaConfig({ baseUrl: 'http://override:9999', apiKey: 'explicit-token' });
       expect(config.baseUrl).toBe('http://override:9999');
+      expect(config.apiKey).toBe('explicit-token');
     });
   });
 
@@ -48,7 +51,7 @@ describe('OllamaLLMClient', () => {
         json: async () => mockResponse,
       });
 
-      const client = new OllamaLLMClient({ baseUrl: 'http://test:11434', model: 'test-model', timeoutMs: 5000 });
+      const client = new OllamaLLMClient({ baseUrl: 'http://test:11434', model: 'test-model', timeoutMs: 5000, apiKey: 'my-secret-key' });
       const result = await client.generateText('system prompt');
 
       expect(result).toBe('Texto generado por el LLM');
@@ -56,6 +59,10 @@ describe('OllamaLLMClient', () => {
         'http://test:11434/api/generate',
         expect.objectContaining({
           method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer my-secret-key',
+          }),
           body: JSON.stringify({ model: 'test-model', prompt: 'system prompt', stream: false }),
         }),
       );
