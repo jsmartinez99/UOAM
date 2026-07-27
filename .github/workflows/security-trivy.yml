@@ -1,55 +1,47 @@
-name: Security - Trivy Docker Scan
+name: Security - Trivy
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '0 0 * * *'  # Todos los días a medianoche
+    branches: ["master"]
   workflow_run:
-    workflows: ["CI/CD - Node.js + Docker + Kubernetes"]
-    types:
-      - completed  # Se ejecuta después de que CI/CD termine
+    workflows: ["CD - Build, Push, Deploy"]
+    types: [completed]
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: trivy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  trivy-scan:
-    name: Trivy Docker Image Scan
+  trivy-image:
+    name: Trivy Image Scan (built locally)
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read  # Para acceder a GHCR
+      security-events: write
     steps:
-      - name: Checkout código
+      - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
-      - name: Loguear en GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image (locally, do not push)
+        run: docker build -t uoam:trivy-scan .
 
-      - name: Extraer tag de la imagen
-        id: image
-        run: |
-          # Usar el mismo tag que en CI/CD
-          IMAGE_TAG=${{ github.sha }}
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            IMAGE_TAG="latest"
-          fi
-          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-
-      - name: Escanear imagen con Trivy
-        uses: aquasecurity/trivy-action@v0.19.0
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2
         with:
-          image-ref: ghcr.io/${{ github.repository }}:${{ steps.image.outputs.tag }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'  # Fallar solo en vulnerabilidades críticas/altas
+          image-ref: uoam:trivy-scan
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: '1'
 
-      - name: Subir resultados a GitHub Security Tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@f081e69141f6ea0aa740920b0c7012cd81a4fbe6
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
+          category: trivy-image

@@ -1,0 +1,16 @@
+# Default owner for everything
+* @jsmartinez99
+
+# CI/CD requires explicit review
+/.github/ @jsmartinez99
+/Dockerfile @jsmartinez99
+/docker-compose.yml @jsmartinez99
+
+# Security-sensitive code
+/src/services/user.service.ts @jsmartinez99
+/src/backend/controllers.ts @jsmartinez99
+/src/config.ts @jsmartinez99
+/src/infrastructure/ @jsmartinez99
+
+# Specs / OpenSpec changes
+/openspec/ @jsmartinez99

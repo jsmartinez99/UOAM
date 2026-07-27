@@ -1,115 +1,94 @@
-name: CI/CD - Node.js + Docker + Kubernetes
+name: CD - Build, Push, Deploy
 
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main", "develop" ]
+    branches: ["master"]
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to Kubernetes after push'
+        required: false
+        default: 'true'
+        type: boolean
+
+concurrency:
+  group: cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   K8S_NAMESPACE: production
-  DOCKERFILE_PATH: ./Dockerfile
 
 jobs:
-  # --- JOB 1: Pruebas y Linting ---
-  test-and-lint:
-    name: Test and Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Ejecutar Linting
-        run: npm run lint
-
-      - name: Ejecutar TypeCheck
-        run: npm run typecheck
-
-      - name: Ejecutar Pruebas
-        run: npm run test
-
-  # --- JOB 2: Construir y Subir Imagen Docker ---
   build-and-push:
     name: Build and Push Docker Image
-    needs: test-and-lint  # Espera a que pasen las pruebas
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write  # Permiso para subir a GHCR
+      packages: write
     steps:
-      - name: Checkout código
+      - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
-      - name: Loguear en GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extraer metadatos (tags, labels)
+      - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=tag
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Construir y Subir Imagen Docker
-        uses: docker/build-push-action@v5
+      - name: Build and push
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
         with:
           context: .
-          file: ${{ env.DOCKERFILE_PATH }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  # --- JOB 3: Desplegar en Kubernetes ---
   deploy-to-k8s:
     name: Deploy to Kubernetes
-    needs: build-and-push  # Espera a que la imagen esté subida
+    needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Solo desplegar desde main
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy != false || github.event_name == 'push'
+    environment:
+      name: production
+      url: https://uoam.example.com
     steps:
-      - name: Checkout código
+      - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
-      - name: Configurar Kubernetes
-        uses: azure/k8s-set-context@v3
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@4334b489abaae3336d9b19d15d53ad72412ec412
         with:
           method: kubeconfig
-          kubeconfig: ${{ secrets.K8S_CONFIG }}  # Configuración del clúster en Secrets
+          kubeconfig: ${{ secrets.K8S_CONFIG }}
 
-      - name: Instalar Helm (si usas Helm)
-        uses: azure/setup-helm@v3
+      - name: Install Helm
+        uses: azure/setup-helm@59b1c81c6280f5abebb1fb1bc585696daa7dfb42
         with:
           version: v3.14.0
 
-      - name: Desplegar con Helm
+      - name: Deploy with Helm
         run: |
           helm upgrade --install uoam ./charts/uoam \
             --namespace ${{ env.K8S_NAMESPACE }} \
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ github.sha }} \
+            --set env.JWT_SECRET.valueFrom.secretKeyRef.name=uoam-secrets \
+            --set env.JWT_SECRET.valueFrom.secretKeyRef.key= jwt-secret \
+            --set env.DATABASE_URL.valueFrom.secretKeyRef.name=uoam-secrets \
+            --set env.DATABASE_URL.valueFrom.secretKeyRef.key=database-url \
             --atomic --wait
-
-      # Opcional: Usar kubectl directamente
-      - name: Aplicar manifiestos de Kubernetes
-        run: |
-          kubectl apply -f k8s/ -n ${{ env.K8S_NAMESPACE }}
-          kubectl rollout status deployment/uoam -n ${{ env.K8S_NAMESPACE }}

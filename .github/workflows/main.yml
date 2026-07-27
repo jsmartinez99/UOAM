@@ -1,14 +1,33 @@
-name: Arranger Ecosystem CI
+name: CI - Lint, Typecheck, Test, Build
 
 on:
   push:
-    branches: [ "master", "develop" ]
+    branches: ["master", "develop"]
   pull_request:
-    branches: [ "master", "develop" ]
+    branches: ["master", "develop"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  lint-typecheck-test:
+    name: Lint, Typecheck, Test
     runs-on: ubuntu-latest
+    services:
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - 6333:6333
+        options: >-
+          --health-cmd "wget -qO- http://localhost:6333/healthz || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      QDRANT_URL: http://localhost:6333
+      JWT_SECRET: ${{ secrets.TEST_JWT_SECRET || 'ci-test-secret-do-not-use-in-prod' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
@@ -22,20 +41,18 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Static Analysis (Lint & Typecheck)
-        run: |
-          npm run lint
-          npm run typecheck
+      - name: Lint
+        run: npm run lint
 
-      - name: Run Domain & Integration Tests (TDD Enforcement)
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test with coverage
         run: npm run test:coverage
-        env:
-          QDRANT_URL: http://localhost:6333
-          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
 
-      - name: Build Application
+      - name: Build
         run: npm run build
 
-      - name: Build Docker Image
+      - name: Build Docker image (master only, no push)
         if: github.ref == 'refs/heads/master'
-        run: docker build -t arranger-core:latest .
+        run: docker build -t uoam:ci .

@@ -11,7 +11,7 @@ export class TransposeRule implements Rule<NoteNode> {
   }
 
   private transposePitch(pitch: string, semitones: number): string {
-    // Implementación simplificada para el prototipo
+    if (semitones === 0) return pitch;
     return `${pitch}+${semitones}`;
   }
 }

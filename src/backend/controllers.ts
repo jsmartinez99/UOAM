@@ -34,24 +34,26 @@ export interface AppDependencies {
 
 // ─── Middleware de autenticación ─────────────────────────────────
 
-export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+export function authenticateToken(dependencies: AppDependencies) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    res.status(401).json({ error: 'Token de autenticación requerido' });
-    return;
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'dev-secret', (err, user) => {
-    if (err) {
-      res.status(403).json({ error: 'Token inválido' });
+    if (!token) {
+      res.status(401).json({ error: 'Token de autenticación requerido' });
       return;
     }
 
-    req.user = user as { id: string; email: string; role: string };
-    next();
-  });
+    jwt.verify(token, dependencies.jwtSecret, (err, user) => {
+      if (err) {
+        res.status(403).json({ error: 'Token inválido' });
+        return;
+      }
+
+      req.user = user as { id: string; email: string; role: string };
+      next();
+    });
+  };
 }
 
 // ─── Middleware de autorización RBAC ──────────────────────────────
@@ -223,23 +225,22 @@ export function createArrangerController(
    async function loginUser(req: Request, res: Response): Promise<Response> {
      try {
        const { email, password } = req.body;
-       // Usar password para verificar (simulado)
-       if (!password) return res.status(400).json({ error: 'Contraseña requerida' });
-       
-       const user = await userService.findByEmail(email);
+       if (!email || !password) {
+         return res.status(400).json({ error: 'Email y contraseña requeridos' });
+       }
 
+       const user = await userService.verifyCredentials(email, password);
        if (!user) {
          return res.status(401).json({ error: 'Credenciales inválidas' });
        }
 
-       // En producción: verificar hash de contraseña
        const token = jwt.sign(
          { id: user.id, email: user.email, role: user.role },
          dependencies.jwtSecret,
          { expiresIn: '1h' },
        );
 
-       return res.json({ token });
+       return res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
      } catch (error: unknown) {
        const err = error as Error;
        return res.status(400).json({ error: err.message });

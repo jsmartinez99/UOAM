@@ -1,26 +1,30 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15
-    read_only: true
+    image: postgres:15-alpine
+    read_only: false
     security_opt:
       - no-new-privileges:true
     tmpfs:
       - /tmp
       - /run/postgresql
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: uoam_db
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-uoam_db}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-uoam_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   qdrant:
     image: qdrant/qdrant
-    read_only: true
+    read_only: false
     security_opt:
       - no-new-privileges:true
     tmpfs:
@@ -30,18 +34,34 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   api:
     build: .
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/uoam_db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-uoam_db}
       QDRANT_URL: http://qdrant:6333
-      JWT_SECRET: supersecretkey
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:
-      - db
-      - qdrant
+      db:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   db_data:

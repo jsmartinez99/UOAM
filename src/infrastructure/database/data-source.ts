@@ -3,17 +3,18 @@ import { config } from '../../config.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const isPostgres = !!process.env.DATABASE_URL;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const isPostgres = config.databaseUrl.startsWith('postgres');
+
 export const AppDataSource = new DataSource(
-  isPostgres || config.databaseUrl.includes('postgres')
+  isPostgres
     ? {
         type: 'postgres',
-        url: process.env.DATABASE_URL || config.databaseUrl,
+        url: config.databaseUrl,
         entities: [path.join(__dirname, 'entities', '*{.js,.ts}')],
         synchronize: true,
-        logging: true,
+        logging: false,
         ssl: false,
       }
     : {
@@ -25,4 +26,3 @@ export const AppDataSource = new DataSource(
         logging: false,
       }
 );
-

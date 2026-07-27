@@ -11,6 +11,7 @@
  */
 
 import { Repository } from 'typeorm';
+import bcrypt from 'bcryptjs';
 import { UserEntity } from '../infrastructure/database/entities/user.entity.js';
 import { AppDataSource } from '../infrastructure/database/data-source.js';
 
@@ -79,8 +80,8 @@ export class UserService {
   private _userRepository: Repository<UserEntity> | null = null;
   private readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   private readonly MIN_PASSWORD_LENGTH = 8;
-  private readonly PASSWORD_STRENGTH_REGEX = 
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+  private readonly PASSWORD_STRENGTH_REGEX =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
   private get userRepository(): Repository<UserEntity> {
     if (!this._userRepository) {
@@ -211,12 +212,10 @@ export class UserService {
   }
 
   private async hashPassword(pass: string): Promise<string> {
-    // Simulación — en producción: bcrypt.hash(pass, 12) o Argon2
-    return `hashed_${pass}`;
+    return bcrypt.hash(pass, 12);
   }
-  
+
   private async comparePassword(pass: string, hashedPass: string): Promise<boolean> {
-    // Simulación — en producción: bcrypt.compare(pass, hashedPass) o Argon2.verify
-    return hashedPass === `hashed_${pass}`;
+    return bcrypt.compare(pass, hashedPass);
   }
 }

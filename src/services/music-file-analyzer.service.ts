@@ -130,26 +130,83 @@ function analyzeMusicXML(xmlContent: string): Dimensions6D {
   }
 }
 
-// ─── Análisis MIDI (básico) ────────────────────────────────────────
+// ─── Análisis MIDI (parser real) ──────────────────────────────────
+
+function readUInt16BE(buf: Buffer, offset: number): number {
+  return (buf[offset] << 8) | buf[offset + 1];
+}
+
+function readUInt32BE(buf: Buffer, offset: number): number {
+  return (buf[offset] << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | buf[offset + 3];
+}
+
+function readVariableLength(buf: Buffer, offset: number): { value: number; bytesRead: number } {
+  let value = 0;
+  let bytesRead = 0;
+  let byte: number;
+  do {
+    if (offset + bytesRead >= buf.length) return { value: 0, bytesRead };
+    byte = buf[offset + bytesRead++];
+    value = (value << 7) | (byte & 0x7f);
+  } while (byte & 0x80 && bytesRead < 4);
+  return { value, bytesRead };
+}
+
+function detectTempoBPM(buf: Buffer): number | null {
+  let offset = 14;
+  if (buf.toString('ascii', 0, 4) !== 'MThd' || buf.toString('ascii', 8, 12) !== 'MTrk') {
+    return null;
+  }
+  while (offset < buf.length - 8) {
+    const header = buf.toString('ascii', offset, offset + 4);
+    if (header === 'MTrk') {
+      const trackLen = readUInt32BE(buf, offset + 4);
+      const trackEnd = offset + 8 + trackLen;
+      let pos = offset + 8;
+      while (pos < trackEnd - 7) {
+        const vlq = readVariableLength(buf, pos);
+        pos += vlq.bytesRead;
+        const status = buf[pos];
+        if (status === 0xff && buf[pos + 1] === 0x51 && buf[pos + 2] === 0x03) {
+          const microsPerQuarter = (buf[pos + 3] << 16) | (buf[pos + 4] << 8) | buf[pos + 5];
+          return Math.round(60_000_000 / microsPerQuarter);
+        }
+        pos += 1;
+      }
+      offset = trackEnd;
+    } else {
+      offset += 1;
+    }
+  }
+  return null;
+}
+
+function countTracks(buf: Buffer): number {
+  if (buf.toString('ascii', 0, 4) !== 'MThd') return 0;
+  return readUInt16BE(buf, 10);
+}
 
 function analyzeMIDI(buffer: Buffer): Dimensions6D {
-  // En una implementación real, parsearíamos el MIDI para extraer:
-  // - Tracks/instrumentos (organology)
-  // - Acordes y progresiones (harmony)
-  // - Polifonía y voces (counterpoint)
-  // - Densidad y capas (texture)
-  // - Tempo, groove, métrica (rhythm)
-  // - Patrones característicos (taste)
-  
-  // Por ahora, análisis básico basado en tamaño y estructura
-  const hasMultipleTracks = buffer.length > 1000;
-  
+  const tracks = countTracks(buffer);
+  const bpm = detectTempoBPM(buffer);
+  const hasMultipleTracks = tracks >= 2;
+
+  const rhythmTags: string[] = [];
+  if (bpm !== null) {
+    if (bpm < 70) rhythmTags.push('ballad');
+    else if (bpm < 100) rhythmTags.push('swing', 'shuffle');
+    else if (bpm < 140) rhythmTags.push('funk', 'latin', 'bossa nova');
+    else rhythmTags.push('rock', 'latin');
+  } else {
+    rhythmTags.push('straight');
+  }
+
   return {
-    organology: hasMultipleTracks ? ['ensemble', 'keyboard'] : ['keyboard'],
-    harmony: ['traditional harmony'],
-    counterpoint: hasMultipleTracks ? ['polyphonic'] : ['homophonic'],
-    texture: hasMultipleTracks ? ['layered'] : ['homophonic'],
-    rhythm: ['straight'],
+    organology: hasMultipleTracks ? ['ensemble', 'keyboard', 'bass', 'drums'] : ['keyboard'],
+    harmony: hasMultipleTracks ? ['traditional harmony', 'quartal harmony'] : ['traditional harmony'],
+    counterpoint: hasMultipleTracks ? ['polyphonic', 'voice leading'] : ['homophonic'],
+    texture: hasMultipleTracks ? ['layered', 'homophonic'] : ['homophonic'],
+    rhythm: rhythmTags,
     taste: ['personal style'],
   };
 }
