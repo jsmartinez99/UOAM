@@ -8,3 +8,7 @@ coverage/
 .playwright-mcp/
 *.bak
 *.ts.bak
+
+# External repos and audit reports (not part of the project)
+github-mcp-server/
+audit/
