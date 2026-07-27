@@ -3,8 +3,8 @@
  * Phase 3: Implementation
  */
 
-import { AudioIngestorImpl } from './ingestors/audio-ingestor';
-import { SymbolicIngestorImpl } from './ingestors/symbolic-ingestor';
+import { AudioIngestorImpl } from './ingestors/audio-ingestor.js';
+import { SymbolicIngestorImpl } from './ingestors/symbolic-ingestor.js';
 
 export interface ProcessedAudio {
   waveform: number[];

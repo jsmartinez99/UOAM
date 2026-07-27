@@ -1,5 +1,5 @@
-import { BaseNode } from './base';
-import { NoteNode, ChordNode, ContainerNode } from './nodes';
+import { BaseNode } from './base.js';
+import { NoteNode, ChordNode, ContainerNode } from './nodes.js';
 
 export class ASTParser {
   parse(data: unknown): BaseNode {

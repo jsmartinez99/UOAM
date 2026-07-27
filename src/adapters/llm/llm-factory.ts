@@ -11,8 +11,8 @@
  *   - Ollama no está disponible y no hay API key configurada
  */
 
-import type { LLMClient } from '../../ports/llm-client.port';
-import { OllamaLLMClient } from './ollama-client';
+import type { LLMClient } from '../../ports/llm-client.port.js';
+import { OllamaLLMClient } from './ollama-client.js';
 
 export class MockLLMClient implements LLMClient {
   async generateText(_systemPrompt: string): Promise<string> {

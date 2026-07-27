@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { SymbolicIngestor, IngestorResult } from './ingestor.interface';
+import { SymbolicIngestor, IngestorResult } from './ingestor.interface.js';
 import { XMLParser } from 'fast-xml-parser';
 import { Midi } from '@tonejs/midi';
 

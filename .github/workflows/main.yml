@@ -2,9 +2,9 @@ name: CI - Lint, Typecheck, Test, Build
 
 on:
   push:
-    branches: ["master", "develop"]
+    branches: ["main", "develop"]
   pull_request:
-    branches: ["master", "develop"]
+    branches: ["main", "develop"]
   workflow_dispatch:
 
 concurrency:
@@ -53,6 +53,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Build Docker image (master only, no push)
-        if: github.ref == 'refs/heads/master'
-        run: docker build -t uoam:ci .
+      - name: Build Docker image (main only, no push)
+        if: github.ref == 'refs/heads/main'
+        run: docker build -t arranger-core:latest .

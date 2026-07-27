@@ -10,17 +10,35 @@ import { logger } from '../logger.js';
  * La inicialización se inicia en el constructor y se completa asíncronamente.
  * ensureInitialized() / ensureSeeded() esperan a que termine.
  */
+async function initializeWithRetry(retries = 10, delayMs = 2000): Promise<void> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await AppDataSource.initialize();
+      return;
+    } catch (error) {
+      if (i === retries - 1) {
+        throw error;
+      }
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn(`Database connection failed. Retrying in ${delayMs / 1000}s... (${i + 1}/${retries})`);
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
 class DatabaseInitializer {
   private static instance: DatabaseInitializer;
   private isInitialized = false;
   private initializationPromise: Promise<void>;
 
   private constructor() {
-    this.initializationPromise = AppDataSource.initialize()
+    this.initializationPromise = initializeWithRetry()
       .then(async () => {
+        await AppDataSource.runMigrations();
         this.isInitialized = true;
         if (process.env.NODE_ENV !== 'test') {
-          console.log('Database initialized successfully');
+          console.log('Database initialized successfully and migrations run');
         }
       })
       .catch((error) => {

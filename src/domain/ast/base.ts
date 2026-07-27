@@ -1,4 +1,4 @@
-import { ASTVisitor } from './visitor';
+import { ASTVisitor } from './visitor.js';
 
 export interface ASTNode {
   type: string;

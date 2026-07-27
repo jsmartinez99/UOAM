@@ -125,16 +125,37 @@ export function createArrangerController(
    *       '400':
    *         description: Validación fallida
    */
-   async function getAllArrangers(_req: Request, res: Response): Promise<Response> {
-     try {
-       const repo = AppDataSource.getRepository(ArrangerProfileEntity);
-       const arrangers = await repo.find();
-       return res.json(arrangers);
-     } catch (error: unknown) {
-       const err = error as Error;
-       return res.status(500).json({ error: err.message });
-     }
-   }
+    async function getAllArrangers(req: Request, res: Response): Promise<Response> {
+      try {
+        const repo = AppDataSource.getRepository(ArrangerProfileEntity);
+        const { page, limit } = req.query;
+
+        if (page !== undefined || limit !== undefined) {
+          const pageNum = parseInt(page as string, 10) || 1;
+          const limitNum = parseInt(limit as string, 10) || 10;
+          const skip = (pageNum - 1) * limitNum;
+
+          const [data, total] = await repo.findAndCount({
+            skip,
+            take: limitNum,
+          });
+
+          return res.json({
+            data,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum),
+          });
+        }
+
+        const arrangers = await repo.find();
+        return res.json(arrangers);
+      } catch (error: unknown) {
+        const err = error as Error;
+        return res.status(500).json({ error: err.message });
+      }
+    }
 
    async function createArranger(req: Request, res: Response): Promise<Response> {
      try {

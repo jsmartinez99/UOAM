@@ -10,7 +10,7 @@
  *   LLM_TIMEOUT_MS   - Timeout en ms (default: 60000)
  */
 
-import { LLMClient } from '../../ports/llm-client.port';
+import { LLMClient } from '../../ports/llm-client.port.js';
 
 export interface OllamaConfig {
   baseUrl: string;

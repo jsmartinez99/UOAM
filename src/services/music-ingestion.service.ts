@@ -1,6 +1,6 @@
-import { SymbolicIngestor } from '../infrastructure/ingestors/ingestor.interface';
-import { FeatureExtractionService } from './feature-extraction.service';
-import { ArrangerProfile } from '../domain/arranger-profile';
+import { SymbolicIngestor } from '../infrastructure/ingestors/ingestor.interface.js';
+import { FeatureExtractionService } from './feature-extraction.service.js';
+import { ArrangerProfile } from '../domain/arranger-profile.js';
 
 export class MusicIngestionService {
   constructor(

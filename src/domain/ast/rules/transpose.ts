@@ -1,5 +1,5 @@
-import { Rule } from '../rule-engine';
-import { NoteNode } from '../nodes';
+import { Rule } from '../rule-engine.js';
+import { NoteNode } from '../nodes.js';
 
 export class TransposeRule implements Rule<NoteNode> {
   constructor(private readonly semitones: number) {}

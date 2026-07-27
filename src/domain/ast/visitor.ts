@@ -1,4 +1,4 @@
-import { NoteNode, ChordNode, ContainerNode } from './nodes';
+import { NoteNode, ChordNode, ContainerNode } from './nodes.js';
 
 export interface ASTVisitor<T> {
   visitNote(node: NoteNode): T;

@@ -1,4 +1,4 @@
-import { Dimensions6D } from '../domain/arranger-profile';
+import { Dimensions6D } from '../domain/arranger-profile.js';
 
 export class FeatureExtractionService {
   extract(rawFeatures: Record<string, unknown>): Dimensions6D {

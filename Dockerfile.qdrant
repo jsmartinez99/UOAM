@@ -1,0 +1,8 @@
+# Qdrant with wget for Docker healthcheck
+# The official qdrant/qdrant image lacks curl/wget, so we add wget
+# on top of the upstream image to support the healthcheck.
+FROM qdrant/qdrant:latest
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends wget \
+ && rm -rf /var/lib/apt/lists/*

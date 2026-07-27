@@ -9,22 +9,32 @@ export class QdrantAdapter implements VectorDatabaseClient {
     this.client = new QdrantClient({ url });
   }
 
-  async ensureCollection(collectionName: string, vectorSize: number = 6): Promise<void> {
-    try {
-      const collections = await this.client.getCollections();
-      const exists = collections.collections.some(c => c.name === collectionName);
-      
-      if (!exists) {
-        await this.client.createCollection(collectionName, {
-          vectors: {
-            size: vectorSize,
-            distance: 'Cosine',
-          },
-        });
-        logger.info(`Collection ${collectionName} created in Qdrant.`);
+  async ensureCollection(collectionName: string, vectorSize: number = 6, retries = 10, delayMs = 2000): Promise<void> {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const collections = await this.client.getCollections();
+        const exists = collections.collections.some(c => c.name === collectionName);
+        
+        if (!exists) {
+          await this.client.createCollection(collectionName, {
+            vectors: {
+              size: vectorSize,
+              distance: 'Cosine',
+            },
+          });
+          logger.info(`Collection ${collectionName} created in Qdrant.`);
+        }
+        return;
+      } catch (error: unknown) {
+        if (i === retries - 1) {
+          logger.error('Error ensuring Qdrant collection after maximum retries:', error as Error);
+          throw error;
+        }
+        if (process.env.NODE_ENV !== 'test') {
+          logger.warn(`Qdrant connection failed. Retrying in ${delayMs / 1000}s... (${i + 1}/${retries})`);
+        }
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
-    } catch (error: unknown) {
-      logger.error('Error ensuring Qdrant collection:', error as Error);
     }
   }
 

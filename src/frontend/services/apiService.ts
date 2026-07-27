@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { ArrangerProfile, Dimensions6D } from '../../domain/arranger-profile';
-import { HybridResult, SearchResult, AnalysisReport } from '../../types/api-types';
+import { ArrangerProfile, Dimensions6D } from '../../domain/arranger-profile.js';
+import { HybridResult, SearchResult, AnalysisReport } from '../../types/api-types.js';
 
 // ─── Configuración de Axios ─────────────────────────────────────────
 
@@ -39,9 +39,11 @@ api.interceptors.response.use(
 export const apiService = {
   // ── Arreglistas ──
 
-  async getArrangers(): Promise<ArrangerProfile[]> {
-    const response = await api.get('/arrangers');
-    return response.data as ArrangerProfile[];
+  async getArrangers(page?: number, limit?: number): Promise<any> {
+    const response = await api.get('/arrangers', {
+      params: { page, limit },
+    });
+    return response.data;
   },
 
   async createArranger(

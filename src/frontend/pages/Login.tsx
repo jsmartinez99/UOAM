@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, Alert, InputAdornment, IconButton, Container } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Alert, InputAdornment, IconButton, Container, CircularProgress } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { apiService } from '../services/apiService';
@@ -137,7 +137,7 @@ export default function Login() {
               mt: 1
             }}
           >
-            {loading ? 'Autenticando...' : 'Iniciar Sesión'}
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Iniciar Sesión'}
           </Button>
 
           <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>

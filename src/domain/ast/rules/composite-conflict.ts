@@ -1,4 +1,4 @@
-import { Rule } from '../rule-engine';
+import { Rule } from '../rule-engine.js';
 import { ContainerNode, NoteNode } from '../nodes.js';
 
 export class CompositeConflictRule implements Rule<ContainerNode> {

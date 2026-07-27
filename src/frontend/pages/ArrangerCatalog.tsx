@@ -108,6 +108,10 @@ export default function ArrangerCatalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDimensions, setSelectedDimensions] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -117,8 +121,16 @@ export default function ArrangerCatalog() {
     const fetchArrangers = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getArrangers();
-        setArrangers(data);
+        const response = await apiService.getArrangers(page, limit);
+        if (response && response.data) {
+          setArrangers(response.data);
+          setTotal(response.total);
+          setTotalPages(response.totalPages);
+        } else {
+          setArrangers(response || []);
+          setTotal(response?.length || 0);
+          setTotalPages(1);
+        }
         setError(null);
       } catch (err) {
         setError('Error al cargar los arreglistas');
@@ -128,7 +140,7 @@ export default function ArrangerCatalog() {
     };
 
     fetchArrangers();
-  }, []);
+  }, [page, limit]);
 
   const filteredArrangers = useMemo(() => {
     return arrangers.filter((arranger) => {
@@ -255,7 +267,7 @@ export default function ArrangerCatalog() {
 
       {/* Results count */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontStyle: 'italic' }}>
-        Mostrando {filteredArrangers.length} de {arrangers.length} perfiles de arreglistas
+        Mostrando {filteredArrangers.length} de {total} perfiles de arreglistas
       </Typography>
 
       {/* Grid */}
@@ -341,6 +353,30 @@ export default function ArrangerCatalog() {
           </Grid>
         ))}
       </Grid>
+
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 5, gap: 2 }}>
+          <Button
+            variant="outlined"
+            disabled={page === 1}
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            sx={{ borderColor: 'rgba(255,255,255,0.1)', color: 'text.primary', '&:hover': { borderColor: 'primary.main' } }}
+          >
+            Anterior
+          </Button>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+            Página {page} de {totalPages}
+          </Typography>
+          <Button
+            variant="outlined"
+            disabled={page === totalPages}
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            sx={{ borderColor: 'rgba(255,255,255,0.1)', color: 'text.primary', '&:hover': { borderColor: 'primary.main' } }}
+          >
+            Siguiente
+          </Button>
+        </Box>
+      )}
 
       {filteredArrangers.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
