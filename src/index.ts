@@ -12,12 +12,14 @@ import { databaseInitializer } from './infrastructure/database/database-initiali
 import { swaggerSpec } from './api/swagger.js';
 import { createLLMClient, resolveLLMProvider } from './adapters/llm/llm-factory.js';
 import { OllamaLLMClient } from './adapters/llm/ollama-client.js';
+import { securityHeaders, rateLimit, jsonBodyLimit } from './backend/security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: jsonBodyLimit }));
+app.use(securityHeaders());
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -67,13 +69,20 @@ async function bootstrap(): Promise<void> {
   const controller = createArrangerController(dependencies);
   const auth = authenticateToken(dependencies);
 
+  // Rate limiter estricto para auth (anti brute force)
+  const authLimiter = rateLimit({ windowMs: 15 * 60_000, maxRequests: 20 });
+  // Rate limiter general para la API
+  const apiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 100 });
+
+  app.use('/api/', apiLimiter);
+
   app.get('/api/v1/arrangers', controller.getAllArrangers);
   app.post('/api/v1/arrangers', auth, controller.createArranger);
   app.post('/api/v1/hybridize', auth, controller.hybridizeProfiles);
   app.post('/api/v1/search', auth, controller.searchSimilar);
   app.post('/api/v1/analyze', auth, controller.generateAnalysis);
-  app.post('/api/v1/auth/register', controller.registerUser);
-  app.post('/api/v1/auth/login', controller.loginUser);
+  app.post('/api/v1/auth/register', authLimiter, controller.registerUser);
+  app.post('/api/v1/auth/login', authLimiter, controller.loginUser);
   app.post('/api/v1/upload', auth, upload.single('musicFile'), controller.uploadArrangement);
   app.post('/api/v1/arrangements/generate', auth, controller.generateStandaloneArrangement);
   app.post('/api/v1/arrangements/export/xml', auth, controller.exportMusicXML);

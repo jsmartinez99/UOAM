@@ -510,9 +510,10 @@ export function createArrangerController(
        if (profileId) {
          const repo = AppDataSource.getRepository(ArrangerProfileEntity);
          const entity = await repo.findOne({ where: { id: profileId } });
-         if (entity) {
-           targetArrangerProfile = new ArrangerProfile(entity.name, entity.dimensions, entity.id);
-         }
+          if (entity) {
+            const dims = typeof entity.dimensions === 'string' ? JSON.parse(entity.dimensions) : entity.dimensions;
+            targetArrangerProfile = new ArrangerProfile(entity.name, dims, entity.id);
+          }
        }
 
        const arrangerService = new StandaloneArrangerService();
