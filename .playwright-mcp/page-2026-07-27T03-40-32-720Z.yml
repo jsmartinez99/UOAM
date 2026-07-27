@@ -1,0 +1,103 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e6]:
+      - heading "UOAM Arranger" [level=6] [ref=f4e11] [cursor=pointer]
+      - generic [ref=f4e12]:
+        - button "Catálogo" [ref=f4e13] [cursor=pointer]
+        - button "Hibridar" [ref=f4e14] [cursor=pointer]
+        - button "Analizar" [ref=f4e15] [cursor=pointer]
+      - generic [ref=f4e16]:
+        - generic [ref=f4e17]:
+          - paragraph [ref=f4e18]: test@example.com
+          - generic [ref=f4e19]: STANDARD
+        - generic [ref=f4e20]: T
+        - button "Salir" [ref=f4e21] [cursor=pointer]
+  - main [ref=f4e22]:
+    - generic [ref=f4e23]:
+      - generic [ref=f4e24]:
+        - heading "Herramienta de Análisis 6D y RAG" [level=1] [ref=f4e25]
+        - paragraph [ref=f4e26]: Visualiza firmas hexadimensionales en gráficos de radar, compara maestros e indexa partituras a través del pipeline de audio.
+      - generic [ref=f4e27]:
+        - generic [ref=f4e28]:
+          - generic [ref=f4e29]:
+            - heading "Seleccionar Arreglistas" [level=3] [ref=f4e30]
+            - generic [ref=f4e47]:
+              - generic [ref=f4e54]: Buscar arreglistas...
+              - generic [ref=f4e48]:
+                - button "Quincy Jones" [ref=f4e100]
+                - combobox "Buscar arreglistas..." [active] [ref=f4e49]
+                - generic [ref=f4e50]:
+                  - button "Clear" [ref=f4e104] [cursor=pointer]
+                  - button "Open" [ref=f4e107] [cursor=pointer]
+                - group:
+                  - generic: Buscar arreglistas...
+            - button [ref=f4e108] [cursor=pointer]
+          - generic [ref=f4e34]:
+            - heading "Ingesta de Audio y Partituras" [level=3] [ref=f4e35]
+            - generic [ref=f4e36] [cursor=pointer]:
+              - paragraph [ref=f4e39]: Haz clic para seleccionar un archivo
+              - text: "Formatos aceptados: MusicXML, MIDI"
+            - button "Procesar y Extraer Firma 6D" [disabled]
+          - generic [ref=f4e112]:
+            - heading "Detalles del Perfil" [level=3] [ref=f4e113]
+            - generic [ref=f4e115]:
+              - heading "Quincy Jones" [level=3] [ref=f4e116]
+              - generic [ref=f4e117]:
+                - generic [ref=f4e118]:
+                  - heading "Organología (3)" [level=6] [ref=f4e119]
+                  - generic [ref=f4e120]:
+                    - generic [ref=f4e121]: Big Band
+                    - generic [ref=f4e123]: Brass Section
+                    - generic [ref=f4e125]: Synths
+                - generic [ref=f4e127]:
+                  - heading "Armonía (3)" [level=6] [ref=f4e128]
+                  - generic [ref=f4e129]:
+                    - generic [ref=f4e130]: Extended Chords
+                    - generic [ref=f4e132]: Sus Chords
+                    - generic [ref=f4e134]: Modulations
+                - generic [ref=f4e136]:
+                  - heading "Contrapunto (3)" [level=6] [ref=f4e137]
+                  - generic [ref=f4e138]:
+                    - generic [ref=f4e139]: Horn Riffs
+                    - generic [ref=f4e141]: Call and Response
+                    - generic [ref=f4e143]: Walking Bass
+                - generic [ref=f4e145]:
+                  - heading "Textura (3)" [level=6] [ref=f4e146]
+                  - generic [ref=f4e147]:
+                    - generic [ref=f4e148]: Dense Brass
+                    - generic [ref=f4e150]: Layered Synths
+                    - generic [ref=f4e152]: Homophonic
+                - generic [ref=f4e154]:
+                  - heading "Ritmo (3)" [level=6] [ref=f4e155]
+                  - generic [ref=f4e156]:
+                    - generic [ref=f4e157]: Swing
+                    - generic [ref=f4e159]: Funk Groove
+                    - generic [ref=f4e161]: Syncopation
+                - generic [ref=f4e163]:
+                  - heading "Gusto (3)" [level=6] [ref=f4e164]
+                  - generic [ref=f4e165]:
+                    - generic [ref=f4e166]: Q Groove
+                    - generic [ref=f4e168]: Swell
+                    - generic [ref=f4e170]: Brass Punch
+        - generic [ref=f4e41]:
+          - heading "Gráfico de Firma Hexadimensional (6D)" [level=3] [ref=f4e172]
+          - generic [ref=f4e174]:
+            - list [ref=f4e176]:
+              - listitem [ref=f4e177]:
+                - img "Quincy Jones legend icon" [ref=f4e178]
+                - text: Quincy Jones
+            - application [ref=f4e180]:
+              - generic [ref=f4e197]:
+                - generic [ref=f4e200]:
+                  - generic [ref=f4e201]: Organología
+                  - generic [ref=f4e203]: Armonía
+                  - generic [ref=f4e206]: Contrapunto
+                  - generic [ref=f4e209]: Textura
+                  - generic [ref=f4e211]: Ritmo
+                  - generic [ref=f4e214]: Gusto
+                - generic [ref=f4e219]:
+                  - generic [ref=f4e220]: "0"
+                  - generic [ref=f4e222]: "1"
+                  - generic [ref=f4e224]: "2"
+                  - generic [ref=f4e226]: "3"
+                  - generic [ref=f4e228]: "4"

@@ -1,0 +1,72 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - banner [ref=f2e4]:
+      - generic [ref=f2e6]:
+        - heading [level=6] [ref=f2e3532] [cursor=pointer]: UOAM Arranger
+        - generic [ref=f2e36]:
+          - button [ref=f2e3533] [cursor=pointer]: Catálogo
+          - button [ref=f2e3534] [cursor=pointer]: Hibridar
+          - button [ref=f2e3535] [cursor=pointer]: Analizar
+        - generic [ref=f2e12]:
+          - generic [ref=f2e40]:
+            - paragraph [ref=f2e41]: test@example.com
+            - generic [ref=f2e42]: STANDARD
+          - generic [ref=f2e43]: T
+          - button [ref=f2e3536] [cursor=pointer]: Salir
+    - main [ref=f2e14]:
+      - generic [ref=f2e3523]:
+        - generic [ref=f2e3524]:
+          - heading [level=1] [ref=f2e3537]: Herramienta de Hibridación AST
+          - paragraph [ref=f2e3526]: Combina la firma estilística de dos maestros musicales para crear un perfil de orquestación híbrido unificado.
+        - generic [ref=f2e3527]:
+          - heading [level=3] [ref=f2e3538]: Selecciona perfiles para hibridar
+          - generic [ref=f2e3529]:
+            - generic [ref=f2e3539]: Perfiles Arreglistas
+            - generic [ref=f2e3530]:
+              - combobox [expanded] [ref=f2e3540] [cursor=pointer]
+              - textbox
+              - group
+          - button [disabled]: Hibridar Perfiles
+  - listbox "Perfiles Arreglistas" [ref=f2e3543]:
+    - option "Quincy Jones" [active] [ref=f2e3544] [cursor=pointer]
+    - option "Astor Piazzolla" [ref=f2e3545] [cursor=pointer]
+    - option "Duke Ellington" [ref=f2e3546] [cursor=pointer]
+    - option "Billy Strayhorn" [ref=f2e3547] [cursor=pointer]
+    - option "Gil Evans" [ref=f2e3548] [cursor=pointer]
+    - option "Claus Ogerman" [ref=f2e3549] [cursor=pointer]
+    - option "Tom Jobim" [ref=f2e3550] [cursor=pointer]
+    - option "Nelson Riddle" [ref=f2e3551] [cursor=pointer]
+    - option "Maria Schneider" [ref=f2e3552] [cursor=pointer]
+    - option "Ferde Grofé" [ref=f2e3553] [cursor=pointer]
+    - option "Henry Mancini" [ref=f2e3554] [cursor=pointer]
+    - option "Lalo Schifrin" [ref=f2e3555] [cursor=pointer]
+    - option "Maurice Ravel" [ref=f2e3556] [cursor=pointer]
+    - option "Joe Hisaishi" [ref=f2e3557] [cursor=pointer]
+    - option "Yoko Kanno" [ref=f2e3558] [cursor=pointer]
+    - option "Fela Kuti" [ref=f2e3559] [cursor=pointer]
+    - option "Hugh Masekela" [ref=f2e3560] [cursor=pointer]
+    - option "Tito Puente" [ref=f2e3561] [cursor=pointer]
+    - option "George Martin" [ref=f2e3562] [cursor=pointer]
+    - option "Toshiko Akiyoshi" [ref=f2e3563] [cursor=pointer]
+    - option "Richard Strauss" [ref=f2e3564] [cursor=pointer]
+    - option "Gustav Mahler" [ref=f2e3565] [cursor=pointer]
+    - option "Igor Stravinsky" [ref=f2e3566] [cursor=pointer]
+    - option "Thad Jones" [ref=f2e3567] [cursor=pointer]
+    - option "Dámaso Pérez Prado" [ref=f2e3568] [cursor=pointer]
+    - option "Eumir Deodato" [ref=f2e3569] [cursor=pointer]
+    - option "Gustav Holst" [ref=f2e3570] [cursor=pointer]
+    - option "Toshiko Akiyoshi" [ref=f2e3571] [cursor=pointer]
+    - option "Sammy Nestico" [ref=f2e3572] [cursor=pointer]
+    - option "Claude Debussy" [ref=f2e3573] [cursor=pointer]
+    - option "Carla Bley" [ref=f2e3574] [cursor=pointer]
+    - option "Toshiko Akiyoshi (Extra)" [ref=f2e3575] [cursor=pointer]
+    - option "John Williams" [ref=f2e3576] [cursor=pointer]
+    - option "Dmitri Shostakovich" [ref=f2e3577] [cursor=pointer]
+    - option "Charlie Mingus" [ref=f2e3578] [cursor=pointer]
+    - option "Don Sebesky" [ref=f2e3579] [cursor=pointer]
+    - option "Oliver Nelson" [ref=f2e3580] [cursor=pointer]
+    - option "A.R. Rahman" [ref=f2e3581] [cursor=pointer]
+    - option "Count Basie" [ref=f2e3582] [cursor=pointer]
+    - option "Charles Mingus" [ref=f2e3583] [cursor=pointer]
+    - option "Test Arranger Full" [ref=f2e3584] [cursor=pointer]
+    - option "x" [ref=f2e3585] [cursor=pointer]

@@ -1,0 +1,26 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - heading "UOAM Arranger" [level=6] [ref=e11] [cursor=pointer]
+      - button "Entrar" [active] [ref=e13] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - heading "Iniciar Sesión" [level=2] [ref=e59]
+        - paragraph [ref=e60]: Accede al Catálogo de Arreglos y Herramientas del Sistema
+      - generic [ref=e61]:
+        - generic: Correo electrónico
+        - generic [ref=e62]:
+          - textbox "Correo electrónico" [ref=e63]
+          - group:
+            - generic: Correo electrónico
+      - generic [ref=e64]:
+        - generic: Contraseña
+        - generic [ref=e65]:
+          - textbox "Contraseña" [ref=e66]
+          - group:
+            - generic: Contraseña
+      - button "Iniciar Sesión" [ref=e67] [cursor=pointer]
+      - generic [ref=e68]:
+        - paragraph [ref=e69]: "¿No tienes cuenta? Regístrate en el sistema o usa las credenciales de demo:"
+        - paragraph [ref=e70]: admin@uoam.com / Admin@1234

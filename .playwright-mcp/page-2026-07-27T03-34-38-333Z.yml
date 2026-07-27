@@ -1,0 +1,75 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - banner [ref=f2e4]:
+      - generic [ref=f2e6]:
+        - heading [level=6] [ref=f2e3532] [cursor=pointer]: UOAM Arranger
+        - generic [ref=f2e36]:
+          - button [ref=f2e3533] [cursor=pointer]: Catálogo
+          - button [ref=f2e3534] [cursor=pointer]: Hibridar
+          - button [ref=f2e3535] [cursor=pointer]: Analizar
+        - generic [ref=f2e12]:
+          - generic [ref=f2e40]:
+            - paragraph [ref=f2e41]: test@example.com
+            - generic [ref=f2e42]: STANDARD
+          - generic [ref=f2e43]: T
+          - button [ref=f2e3536] [cursor=pointer]: Salir
+    - main [ref=f2e14]:
+      - generic [ref=f2e3523]:
+        - generic [ref=f2e3524]:
+          - heading [level=1] [ref=f2e3537]: Herramienta de Hibridación AST
+          - paragraph [ref=f2e3526]: Combina la firma estilística de dos maestros musicales para crear un perfil de orquestación híbrido unificado.
+        - generic [ref=f2e3527]:
+          - heading [level=3] [ref=f2e3538]: Selecciona perfiles para hibridar
+          - generic [ref=f2e3529]:
+            - generic [ref=f2e3539]: Perfiles Arreglistas
+            - generic [ref=f2e3530]:
+              - combobox [expanded] [ref=f2e3540] [cursor=pointer]:
+                - generic [ref=f2e3586]:
+                  - generic [ref=f2e3587]: Claus Ogerman
+                  - generic [ref=f2e3589]: Tom Jobim
+              - textbox: 00000000-0000-0000-0000-000000000006,00000000-0000-0000-0000-000000000007
+              - group
+          - button [ref=f2e3591] [cursor=pointer]: Hibridar Perfiles
+  - listbox "Perfiles Arreglistas" [ref=f2e3543]:
+    - option "Quincy Jones" [disabled]
+    - option "Astor Piazzolla" [disabled]
+    - option "Duke Ellington" [disabled]
+    - option "Billy Strayhorn" [disabled]
+    - option "Gil Evans" [disabled]
+    - option "Claus Ogerman" [selected] [ref=f2e3549] [cursor=pointer]
+    - option "Tom Jobim" [active] [selected] [ref=f2e3550] [cursor=pointer]
+    - option "Nelson Riddle" [disabled]
+    - option "Maria Schneider" [disabled]
+    - option "Ferde Grofé" [disabled]
+    - option "Henry Mancini" [disabled]
+    - option "Lalo Schifrin" [disabled]
+    - option "Maurice Ravel" [disabled]
+    - option "Joe Hisaishi" [disabled]
+    - option "Yoko Kanno" [disabled]
+    - option "Fela Kuti" [disabled]
+    - option "Hugh Masekela" [disabled]
+    - option "Tito Puente" [disabled]
+    - option "George Martin" [disabled]
+    - option "Toshiko Akiyoshi" [disabled]
+    - option "Richard Strauss" [disabled]
+    - option "Gustav Mahler" [disabled]
+    - option "Igor Stravinsky" [disabled]
+    - option "Thad Jones" [disabled]
+    - option "Dámaso Pérez Prado" [disabled]
+    - option "Eumir Deodato" [disabled]
+    - option "Gustav Holst" [disabled]
+    - option "Toshiko Akiyoshi" [disabled]
+    - option "Sammy Nestico" [disabled]
+    - option "Claude Debussy" [disabled]
+    - option "Carla Bley" [disabled]
+    - option "Toshiko Akiyoshi (Extra)" [disabled]
+    - option "John Williams" [disabled]
+    - option "Dmitri Shostakovich" [disabled]
+    - option "Charlie Mingus" [disabled]
+    - option "Don Sebesky" [disabled]
+    - option "Oliver Nelson" [disabled]
+    - option "A.R. Rahman" [disabled]
+    - option "Count Basie" [disabled]
+    - option "Charles Mingus" [disabled]
+    - option "Test Arranger Full" [disabled]
+    - option "x" [disabled]

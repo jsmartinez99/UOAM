@@ -1,0 +1,29 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - heading "UOAM Arranger" [level=6] [ref=e11] [cursor=pointer]
+      - button "Entrar" [ref=e13] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - heading "Ecosistema Híbrido de Arreglos Musicales" [level=1] [ref=e17]
+        - heading "Audita influencias estilísticas, analiza partituras y genera perfiles de orquestación híbridos a partir de firmas hexadimensionales avanzadas basadas en IA." [level=5] [ref=e18]
+        - generic [ref=e19]:
+          - button "Ver Catálogo de Arreglistas" [ref=e20] [cursor=pointer]
+          - button "Iniciar Sesión" [ref=e21] [cursor=pointer]
+      - heading "Características del Sistema" [level=2] [ref=e22]
+      - generic [ref=e23]:
+        - generic [ref=e25]:
+          - heading "Firma Hexadimensional (6D)" [level=3] [ref=e29]
+          - paragraph [ref=e30]: "Cada perfil de arreglista es modelado técnicamente a través de 6 dimensiones fundamentales: Organología, Armonía, Contrapunto, Textura, Rítmica y Gusto."
+        - generic [ref=e32]:
+          - heading "Motor de Hibridación AST" [level=3] [ref=e36]
+          - paragraph [ref=e37]: Combina las dimensiones estilísticas de múltiples maestros. El motor utiliza un AST musical para resolver colisiones tímbricas y tesituras instrumentales complejas.
+        - generic [ref=e39]:
+          - heading "Búsqueda Vectorial y RAG" [level=3] [ref=e43]
+          - paragraph [ref=e44]: Indexa perfiles en Qdrant para búsquedas de afinidad por K-Vecinos más cercanos. Genera reportes teóricos mediante pipelines de LLM basados en RAG controlado.
+      - paragraph [ref=e49]:
+        - text: "Credenciales de Auditoría / Demo:"
+        - strong [ref=e50]: admin@uoam.com
+        - text: /
+        - strong [ref=e51]: Admin@1234

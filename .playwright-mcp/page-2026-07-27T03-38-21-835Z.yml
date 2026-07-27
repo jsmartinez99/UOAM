@@ -1,0 +1,37 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e6]:
+      - heading "UOAM Arranger" [level=6] [ref=f4e11] [cursor=pointer]
+      - generic [ref=f4e12]:
+        - button "Catálogo" [ref=f4e13] [cursor=pointer]
+        - button "Hibridar" [ref=f4e14] [cursor=pointer]
+        - button "Analizar" [ref=f4e15] [cursor=pointer]
+      - generic [ref=f4e16]:
+        - generic [ref=f4e17]:
+          - paragraph [ref=f4e18]: test@example.com
+          - generic [ref=f4e19]: STANDARD
+        - generic [ref=f4e20]: T
+        - button "Salir" [ref=f4e21] [cursor=pointer]
+  - main [ref=f4e22]:
+    - generic [ref=f4e23]:
+      - generic [ref=f4e24]:
+        - heading "Herramienta de Análisis 6D y RAG" [level=1] [ref=f4e25]
+        - paragraph [ref=f4e26]: Visualiza firmas hexadimensionales en gráficos de radar, compara maestros e indexa partituras a través del pipeline de audio.
+      - generic [ref=f4e27]:
+        - generic [ref=f4e28]:
+          - generic [ref=f4e29]:
+            - heading "Seleccionar Arreglistas" [level=3] [ref=f4e30]
+            - progressbar [ref=f4e31]
+            - button "Generar Análisis RAG" [disabled]
+          - generic [ref=f4e34]:
+            - heading "Ingesta de Audio y Partituras" [level=3] [ref=f4e35]
+            - generic [ref=f4e36] [cursor=pointer]:
+              - paragraph [ref=f4e39]: Haz clic para seleccionar un archivo
+              - text: "Formatos aceptados: MusicXML, MIDI"
+            - button "Procesar y Extraer Firma 6D" [disabled]:
+              - generic:
+                - progressbar
+              - text: Procesar y Extraer Firma 6D
+        - generic [ref=f4e41]:
+          - heading "Visualización de Firma Estilística" [level=3] [ref=f4e44]
+          - paragraph [ref=f4e45]: Selecciona uno o más arreglistas en el panel de control para renderizar el gráfico radar comparativo.
