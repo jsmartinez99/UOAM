@@ -13,6 +13,7 @@ import { ArrangerProfileEntity } from '../infrastructure/database/entities/arran
 import { In } from 'typeorm';
 import { logger } from '../infrastructure/logger.js';
 import { StandaloneArrangerService } from '../services/standalone-arranger.service.js';
+import { requireStringField, BadRequestError } from './http-helpers.js';
 import { MusicXMLExporterService } from '../services/musicxml-exporter.service.js';
 
 // Extender Request para incluir user
@@ -170,35 +171,34 @@ export function createArrangerController(
       }
     }
 
-   async function createArranger(req: Request, res: Response): Promise<Response> {
-     try {
-       const { name, dimensions } = req.body;
-       const profile = new ArrangerProfile(name, dimensions as Dimensions6D);
-       
-       const repo = AppDataSource.getRepository(ArrangerProfileEntity);
-       const entity = repo.create({
-         id: profile.id,
-         name: profile.name,
-         dimensions: profile.dimensions
-       });
-       await repo.save(entity);
+    async function createArranger(req: Request, res: Response): Promise<Response> {
+      const name = requireStringField(req.body, 'name');
+      const dimensions = (req.body as Record<string, unknown>).dimensions as Dimensions6D | undefined;
+      if (!dimensions || typeof dimensions !== 'object') {
+        throw new BadRequestError('Campo requerido: dimensions');
+      }
+      const profile = new ArrangerProfile(name, dimensions);
 
-       // Index in Qdrant
-       if (dependencies.qdrantClient.upsert) {
-         const vector = Object.values(profile.toDimensionSummary());
-         await dependencies.qdrantClient.upsert('arrangements_collection', [{
-           id: profile.id,
-           vector,
-           payload: { name: profile.name }
-         }]);
-       }
+      const repo = AppDataSource.getRepository(ArrangerProfileEntity);
+      const entity = repo.create({
+        id: profile.id,
+        name: profile.name,
+        dimensions: profile.dimensions
+      });
+      await repo.save(entity);
 
-       return res.status(201).json(profile);
-     } catch (error: unknown) {
-       const err = error as Error;
-       return res.status(400).json({ error: err.message });
-     }
-   }
+      // Index in Qdrant
+      if (dependencies.qdrantClient.upsert) {
+        const vector = Object.values(profile.toDimensionSummary());
+        await dependencies.qdrantClient.upsert('arrangements_collection', [{
+          id: profile.id,
+          vector,
+          payload: { name: profile.name }
+        }]);
+      }
+
+      return res.status(201).json(profile);
+    }
 
   // ── Hibridación ──
 
