@@ -3,11 +3,12 @@ version: '3.8'
 services:
   db:
     image: postgres:15
+    read_only: true
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
+      - /run/postgresql
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -19,11 +20,12 @@ services:
 
   qdrant:
     image: qdrant/qdrant
+    read_only: true
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
+      - /qdrant/snapshots
     ports:
       - "6333:6333"
     volumes:

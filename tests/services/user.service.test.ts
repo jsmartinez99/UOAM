@@ -151,6 +151,33 @@ describe('UserService', () => {
     expect(await service.findByEmail('nonexistent@example.com')).toBeUndefined();
   });
 
+  // ── Verificación de credenciales ──
+
+  describe('verifyCredentials', () => {
+    it('debe validar credenciales correctas', async () => {
+      const email = 'valid@example.com';
+      const pass = 'SecurePass123!';
+      await service.registerUser(email, pass);
+
+      const verified = await service.verifyCredentials(email, pass);
+      expect(verified).toBeDefined();
+      expect(verified?.email).toBe(email);
+    });
+
+    it('debe rechazar contraseñas incorrectas', async () => {
+      const email = 'valid@example.com';
+      await service.registerUser(email, 'SecurePass123!');
+
+      const verified = await service.verifyCredentials(email, 'WrongPass123!');
+      expect(verified).toBeUndefined();
+    });
+
+    it('debe devolver undefined para emails inexistentes', async () => {
+      const verified = await service.verifyCredentials('noexist@example.com', 'SomePass123!');
+      expect(verified).toBeUndefined();
+    });
+  });
+
   // ── Autorización RBAC ──
 
   describe('RBAC Authorization', () => {

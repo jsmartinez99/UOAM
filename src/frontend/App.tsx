@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './components/Layout';
@@ -15,26 +15,51 @@ import { PrivateRoute } from './components/PrivateRoute';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#c5a059', // Brass / Gold
+      light: '#e1c28f',
+      dark: '#93722e',
+      contrastText: '#0a0b10',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#00C49F', // Waveform Teal
+      light: '#33d0b2',
+      dark: '#008c6f',
+      contrastText: '#ffffff',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#0a0b10', // Obsidian
+      paper: '#121420',   // Deep Slate
+    },
+    text: {
+      primary: '#f3f4f6',
+      secondary: '#9ca3af',
     },
   },
   typography: {
-    fontFamily: 'Roboto, sans-serif',
+    fontFamily: '"Outfit", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontSize: '2.5rem',
-      fontWeight: 500,
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
     },
     h2: {
       fontSize: '2rem',
-      fontWeight: 500,
+      fontWeight: 700,
+      letterSpacing: '-0.01em',
     },
+    h3: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+    },
+    body1: {
+      fontSize: '1rem',
+      lineHeight: 1.6,
+    },
+  },
+  shape: {
+    borderRadius: 12,
   },
   components: {
     MuiButton: {
@@ -42,6 +67,31 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
+          fontWeight: 600,
+          padding: '8px 16px',
+          boxShadow: 'none',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(197, 160, 89, 0.25)',
+            transform: 'translateY(-1px)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#0a0b10',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: 'none',
         },
       },
     },
@@ -60,8 +110,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/catalog" element={<ArrangerCatalog />} />
               <Route element={<PrivateRoute />}>
+                <Route path="/catalog" element={<ArrangerCatalog />} />
                 <Route path="/hybridize" element={<HybridizationTool />} />
                 <Route path="/analyze" element={<AnalysisTool />} />
               </Route>

@@ -10,8 +10,9 @@
  * En producción el hash iría con bcrypt/Argon2.
  */
 
-import { AppDataSource } from '../infrastructure/database/data-source.js';
+import { Repository } from 'typeorm';
 import { UserEntity } from '../infrastructure/database/entities/user.entity.js';
+import { AppDataSource } from '../infrastructure/database/data-source.js';
 
 // ─── Tipos de dominio ────────────────────────────────────────────
 
@@ -75,10 +76,23 @@ export const PERMISSIONS: RBACPermission[] = [
 // ─── Servicio de Usuarios ────────────────────────────────────────
 
 export class UserService {
+  private _userRepository: Repository<UserEntity> | null = null;
   private readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   private readonly MIN_PASSWORD_LENGTH = 8;
-  private readonly PASSWORD_STRENGTH_REGEX =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+  private readonly PASSWORD_STRENGTH_REGEX = 
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+  private get userRepository(): Repository<UserEntity> {
+    if (!this._userRepository) {
+      this._userRepository = AppDataSource.getRepository(UserEntity);
+    }
+    return this._userRepository;
+  }
+  
+  constructor() {
+    // Repository is lazily initialized
+    // La inicialización de la base de datos ahora se maneja externamente
+  }
 
   /**
    * Registra un nuevo usuario con rol STANDARD por defecto.
@@ -91,22 +105,21 @@ export class UserService {
     this.validateEmail(email);
     this.validatePassword(pass);
 
-    const userRepository = AppDataSource.getRepository(UserEntity);
     const normalizedEmail = email.toLowerCase().trim();
     
-    const existingUser = await userRepository.findOneBy({ email: normalizedEmail });
+    const existingUser = await this.userRepository.findOneBy({ email: normalizedEmail });
     if (existingUser) {
       throw new DuplicateEmailError(normalizedEmail);
     }
 
     const hashedPassword = await this.hashPassword(pass);
-    const user = userRepository.create({
+    const user = this.userRepository.create({
       email: normalizedEmail,
       role,
       hashedPassword,
     });
 
-    await userRepository.save(user);
+    await this.userRepository.save(user);
 
     return {
       id: user.id,
@@ -135,11 +148,35 @@ export class UserService {
   }
 
   /**
+   * Verifica las credenciales de un usuario.
+   */
+  async verifyCredentials(email: string, pass: string): Promise<User | undefined> {
+    try {
+      const user = await this.userRepository.findOneBy({ email: email.toLowerCase().trim() });
+      if (!user) return undefined;
+
+      const isPasswordValid = await this.comparePassword(pass, user.hashedPassword);
+      if (!isPasswordValid) {
+        return undefined;
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        role: user.role as UserRole,
+        createdAt: user.createdAt,
+      };
+    } catch (error) {
+      console.error('Error verifying credentials:', error);
+      return undefined;
+    }
+  }
+
+  /**
    * Busca un usuario por email.
    */
   async findByEmail(email: string): Promise<User | undefined> {
-    const userRepository = AppDataSource.getRepository(UserEntity);
-    const user = await userRepository.findOneBy({ email: email.toLowerCase().trim() });
+    const user = await this.userRepository.findOneBy({ email: email.toLowerCase().trim() });
     
     if (!user) return undefined;
 
@@ -151,7 +188,7 @@ export class UserService {
     };
   }
 
-  // ── Validaciones privadas ──
+  // ── Validaciones privadas ────
 
   private validateEmail(email: string): void {
     if (!email || !this.EMAIL_REGEX.test(email.trim())) {
@@ -176,5 +213,10 @@ export class UserService {
   private async hashPassword(pass: string): Promise<string> {
     // Simulación — en producción: bcrypt.hash(pass, 12) o Argon2
     return `hashed_${pass}`;
+  }
+  
+  private async comparePassword(pass: string, hashedPass: string): Promise<boolean> {
+    // Simulación — en producción: bcrypt.compare(pass, hashedPass) o Argon2.verify
+    return hashedPass === `hashed_${pass}`;
   }
 }

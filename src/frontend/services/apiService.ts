@@ -5,7 +5,7 @@ import { HybridResult, SearchResult, AnalysisReport } from '../../types/api-type
 // ─── Configuración de Axios ─────────────────────────────────────────
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1',
+  baseURL: process.env.REACT_APP_API_URL || '/api/v1',
   timeout: 30000, // Longer timeout for file uploads
   headers: {
     'Content-Type': 'application/json',

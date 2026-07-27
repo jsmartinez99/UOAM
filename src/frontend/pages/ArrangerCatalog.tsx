@@ -20,15 +20,17 @@ import {
   Tooltip,
   IconButton,
   InputAdornment,
+  Container,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { apiService } from '../services/apiService';
-import { DIMENSION_KEYS } from '../../domain/arranger-profile';
 
 // ─── Componentes de UI reutilizables ────────────────────────────────
 
@@ -36,19 +38,45 @@ const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  backgroundColor: 'rgba(18, 20, 32, 0.55)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.05)',
+  borderRadius: theme.shape.borderRadius * 1.5,
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '4px',
+    background: 'linear-gradient(90deg, #c5a059 0%, #00C49F 100%)',
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
+  },
   '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: theme.shadows[10],
+    transform: 'translateY(-6px)',
+    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3)',
+    borderColor: 'rgba(197, 160, 89, 0.25)',
+    '&::before': {
+      opacity: 1,
+    }
   },
 }));
 
 const DimensionChip = styled(Chip)(({ theme }) => ({
   margin: theme.spacing(0.25),
-  backgroundColor: theme.palette.primary.light,
-  color: theme.palette.primary.contrastText,
-  fontSize: '0.7rem',
-  height: 24,
+  backgroundColor: 'rgba(197, 160, 89, 0.1)',
+  color: '#e1c28f',
+  border: '1px solid rgba(197, 160, 89, 0.15)',
+  fontSize: '0.68rem',
+  fontWeight: 500,
+  height: 22,
+  '&:hover': {
+    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+  }
 }));
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -68,6 +96,8 @@ const DIMENSION_ICONS: Record<string, string> = {
   rhythm: '🥁',
   taste: '✨',
 };
+
+const DIMENSION_KEYS = ['organology', 'harmony', 'counterpoint', 'texture', 'rhythm', 'taste'] as const;
 
 // ─── Componente principal ──────────────────────────────────────────
 
@@ -112,10 +142,6 @@ export default function ArrangerCatalog() {
   }, [arrangers, searchTerm, selectedDimensions]);
 
   const handleHybridize = (id: string) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     navigate(`/hybridize?profile=${id}`);
   };
 
@@ -134,159 +160,179 @@ export default function ArrangerCatalog() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress size={60} />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress size={50} color="primary" />
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
-        <Alert severity="error">{error}</Alert>
-      </Snackbar>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h2" gutterBottom component="h1">
-          Catálogo de Arreglistas
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Filtros avanzados">
-            <IconButton
-              onClick={() => setShowFilters(!showFilters)}
-              color={showFilters ? 'primary' : 'default'}
-            >
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      {error && (
+        <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
+          <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>
+        </Snackbar>
+      )}
 
-      {/* Search bar */}
-      <Box sx={{ mb: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h1" gutterBottom>
+              Catálogo de Arreglistas
+            </Typography>
+            <Typography color="text.secondary">
+              Explora los perfiles y firmas estilísticas en el ecosistema musical.
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant={showFilters ? 'contained' : 'outlined'}
+              color="primary"
+              onClick={() => setShowFilters(!showFilters)}
+              startIcon={<FilterListIcon />}
+            >
+              Filtros
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Search bar */}
         <TextField
           fullWidth
-          label="Buscar arreglistas por nombre..."
+          placeholder="Buscar arreglistas por nombre..."
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon color="action" />
+                <SearchIcon color="primary" />
               </InputAdornment>
             ),
           }}
-          sx={{ maxWidth: 500 }}
+          sx={{
+            maxWidth: 600,
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'rgba(18, 20, 32, 0.4)',
+            }
+          }}
         />
       </Box>
 
       {/* Advanced filters */}
       {showFilters && (
-        <Accordion sx={{ mb: 3 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">
-              <FilterListIcon sx={{ mr: 1 }} /> Filtros por Dimensión
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {DIMENSION_KEYS.map((dim) => (
-                <Tooltip key={dim} title={DIMENSION_LABELS[dim]}>
-                  <Chip
-                    label={`${DIMENSION_ICONS[dim]} ${DIMENSION_LABELS[dim]}`}
-                    onClick={() => toggleDimension(dim)}
-                    clickable
-                    variant={selectedDimensions.includes(dim) ? 'filled' : 'outlined'}
-                    color={selectedDimensions.includes(dim) ? 'primary' : 'default'}
-                    size="small"
-                  />
-                </Tooltip>
-              ))}
-            </Box>
-            {selectedDimensions.length > 0 && (
-              <Button
-                size="small"
-                color="secondary"
-                variant="text"
-                onClick={() => setSelectedDimensions([])}
-                sx={{ mt: 1 }}
-              >
-                Limpiar filtros
-              </Button>
-            )}
-          </AccordionDetails>
-        </Accordion>
+        <Paper sx={{ p: 3, mb: 4, bgcolor: 'rgba(18, 20, 32, 0.3)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Filtrar por Dimensión Activa:
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {DIMENSION_KEYS.map((dim) => (
+              <Chip
+                key={dim}
+                label={`${DIMENSION_ICONS[dim]} ${DIMENSION_LABELS[dim]}`}
+                onClick={() => toggleDimension(dim)}
+                clickable
+                variant={selectedDimensions.includes(dim) ? 'filled' : 'outlined'}
+                color={selectedDimensions.includes(dim) ? 'primary' : 'default'}
+                sx={{ px: 1 }}
+              />
+            ))}
+          </Box>
+          {selectedDimensions.length > 0 && (
+            <Button
+              size="small"
+              color="primary"
+              variant="text"
+              onClick={() => setSelectedDimensions([])}
+              sx={{ mt: 2 }}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </Paper>
       )}
 
       {/* Results count */}
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        {filteredArrangers.length} de {arrangers.length} arreglistas
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontStyle: 'italic' }}>
+        Mostrando {filteredArrangers.length} de {arrangers.length} perfiles de arreglistas
       </Typography>
 
       {/* Grid */}
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {filteredArrangers.map((arranger) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={arranger.id}>
+          <Grid item xs={12} sm={6} md={4} key={arranger.id}>
             <StyledCard>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Typography variant="h6" component="h2" gutterBottom>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography variant="h3" sx={{ fontSize: '1.25rem', fontWeight: 800 }}>
                     {arranger.name}
                   </Typography>
                   <Chip
-                    label={`${totalAttributes(arranger)} attrs`}
+                    label={`${totalAttributes(arranger)} atributos`}
                     size="small"
                     variant="outlined"
                     color="primary"
+                    sx={{ fontSize: '0.65rem', height: 20, fontWeight: 600 }}
                   />
                 </Box>
 
-                {/* All 6 dimensions in expandable sections */}
-                {DIMENSION_KEYS.map((dim) => {
-                  const values = arranger.dimensions[dim] || [];
-                  if (values.length === 0) return null;
-                  return (
-                    <Box key={dim} sx={{ mb: 1.5 }}>
-                      <Typography variant="caption" color="text.secondary" gutterBottom>
-                        {DIMENSION_ICONS[dim]} {DIMENSION_LABELS[dim]} ({values.length})
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {values.slice(0, 4).map((v: string, i: number) => (
-                          <DimensionChip key={i} label={v} />
-                        ))}
-                        {values.length > 4 && (
-                          <Chip
-                            size="small"
-                            label={`+${values.length - 4} más`}
-                            variant="outlined"
-                            color="default"
-                          />
-                        )}
+                {/* All 6 dimensions */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {DIMENSION_KEYS.map((dim) => {
+                    const values = arranger.dimensions[dim] || [];
+                    if (values.length === 0) return null;
+                    return (
+                      <Box key={dim}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5, fontWeight: 600, fontSize: '0.7rem' }}
+                        >
+                          <span>{DIMENSION_ICONS[dim]}</span>
+                          <span>{DIMENSION_LABELS[dim]}</span>
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {values.slice(0, 3).map((v: string, i: number) => (
+                            <DimensionChip key={i} label={v} />
+                          ))}
+                          {values.length > 3 && (
+                            <Chip
+                              size="small"
+                              label={`+${values.length - 3}`}
+                              variant="outlined"
+                              sx={{ 
+                                fontSize: '0.65rem', 
+                                height: 22, 
+                                borderColor: 'rgba(255,255,255,0.05)',
+                                color: 'text.secondary' 
+                              }}
+                            />
+                          )}
+                        </Box>
                       </Box>
-                    </Box>
-                  );
-                })}
+                    );
+                  })}
+                </Box>
               </CardContent>
 
-              <CardActions sx={{ mt: 'auto', p: 2, display: 'flex', gap: 1 }}>
+              <CardActions sx={{ mt: 'auto', p: 3, pt: 1, borderTop: '1px solid rgba(255,255,255,0.03)', display: 'flex', gap: 1.5 }}>
                 <Button
                   size="small"
+                  variant="contained"
                   color="primary"
                   onClick={() => handleHybridize(arranger.id)}
-                  disabled={!user}
-                  startIcon={!user ? <Tooltip title="Inicia sesión para hibridar">🔒</Tooltip> : null}
+                  startIcon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+                  fullWidth
                 >
                   Hibridar
                 </Button>
                 <Button
                   size="small"
+                  variant="outlined"
                   onClick={() => handleAnalyze(arranger.id)}
-                  startIcon="🔍"
+                  startIcon={<InsightsIcon sx={{ fontSize: 16 }} />}
+                  fullWidth
                 >
                   Analizar
                 </Button>
@@ -296,16 +342,16 @@ export default function ArrangerCatalog() {
         ))}
       </Grid>
 
-      {filteredArrangers.length === 0 && !loading && (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
+      {filteredArrangers.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h5" color="text.secondary" gutterBottom>
             No se encontraron arreglistas
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'El catálogo está vacío. Sube un arreglo para empezar.'}
+          <Typography variant="body2" color="text.secondary">
+            Intenta usando otros términos en la búsqueda o limpiando los filtros seleccionados.
           </Typography>
         </Box>
       )}
-    </Box>
+    </Container>
   );
 }

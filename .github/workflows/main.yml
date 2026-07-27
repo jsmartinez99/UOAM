@@ -2,9 +2,9 @@ name: Arranger Ecosystem CI
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "master", "develop" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "master", "develop" ]
 
 jobs:
   build-and-test:
@@ -26,15 +26,16 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
-          # Añadir validación de documentación si es necesario
-          # npm run validate-docs
 
       - name: Run Domain & Integration Tests (TDD Enforcement)
-        run: npm run test -- --coverage
+        run: npm run test:coverage
         env:
           QDRANT_URL: http://localhost:6333
           JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
 
+      - name: Build Application
+        run: npm run build
+
       - name: Build Docker Image
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: docker build -t arranger-core:latest .
