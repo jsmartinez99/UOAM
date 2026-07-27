@@ -12,3 +12,4 @@ coverage/
 # External repos and audit reports (not part of the project)
 github-mcp-server/
 audit/
+test-results/
