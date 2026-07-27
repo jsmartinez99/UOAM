@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
-import { createArrangerController } from './backend/controllers.js';
+import { createArrangerController, authenticateToken } from './backend/controllers.js';
 import { config } from './config.js';
 import { QdrantAdapter } from './infrastructure/qdrant/qdrant-client.js';
 import { logger } from './infrastructure/logger.js';
@@ -39,6 +39,9 @@ async function bootstrap(): Promise<void> {
   await qdrantAdapter.ensureCollection('arrangements_collection', 6);
   logger.info('Qdrant collection ready');
 
+  await databaseInitializer.ensureSeeded(qdrantAdapter);
+  logger.info('Database seed complete');
+
   const dependencies = {
     qdrantClient: qdrantAdapter,
     llmClient: { generateText: async () => 'Mock analysis' } as LLMClient,
@@ -46,15 +49,16 @@ async function bootstrap(): Promise<void> {
   };
 
   const controller = createArrangerController(dependencies);
+  const auth = authenticateToken(dependencies);
 
-  app.get('/api/v1/arrangers', controller.getAllArrangers);
-  app.post('/api/v1/arrangers', controller.createArranger);
-  app.post('/api/v1/hybridize', controller.hybridizeProfiles);
-  app.post('/api/v1/search', controller.searchSimilar);
-  app.post('/api/v1/analyze', controller.generateAnalysis);
+  app.get('/api/v1/arrangers', auth, controller.getAllArrangers);
+  app.post('/api/v1/arrangers', auth, controller.createArranger);
+  app.post('/api/v1/hybridize', auth, controller.hybridizeProfiles);
+  app.post('/api/v1/search', auth, controller.searchSimilar);
+  app.post('/api/v1/analyze', auth, controller.generateAnalysis);
   app.post('/api/v1/auth/register', controller.registerUser);
   app.post('/api/v1/auth/login', controller.loginUser);
-  app.post('/api/v1/upload', upload.single('file'), controller.uploadArrangement);
+  app.post('/api/v1/upload', auth, upload.single('musicFile'), controller.uploadArrangement);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
   app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));

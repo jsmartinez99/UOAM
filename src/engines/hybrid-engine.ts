@@ -75,13 +75,13 @@ export class HybridEngine {
   mergeFullSignatures(
     signatureA: Dimensions6D,
     signatureB: Dimensions6D,
-  ): { merged: Dimensions6D; resolutionLog: string[] } {
+  ): { mergedProfile: Dimensions6D; resolutionLog: string[] } {
     const mergeResult = this.merge({
       organology: [...new Set([...signatureA.organology, ...signatureB.organology])],
       texture: [...new Set([...signatureA.texture, ...signatureB.texture])],
     });
 
-    const merged: Dimensions6D = {
+    const mergedProfile: Dimensions6D = {
       organology: mergeResult.resolvedFeatures.organology,
       harmony: [...new Set([...signatureA.harmony, ...signatureB.harmony])],
       counterpoint: [...new Set([...signatureA.counterpoint, ...signatureB.counterpoint])],
@@ -90,6 +90,6 @@ export class HybridEngine {
       taste: [...new Set([...signatureA.taste, ...signatureB.taste])],
     };
 
-    return { merged, resolutionLog: mergeResult.resolutionLog };
+    return { mergedProfile, resolutionLog: mergeResult.resolutionLog };
   }
 }

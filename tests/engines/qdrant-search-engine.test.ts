@@ -142,4 +142,74 @@ describe('Qdrant Search Engine', () => {
       expect(report.totalCandidates).toBe(0);
     });
   });
+
+  // ── Score incluido en cada resultado ──
+
+  it('debe incluir el score de similitud en cada resultado de búsqueda', async () => {
+    const mockClient = createMockClient([
+      { payload: 'Ogerman', score: 0.92 },
+      { payload: 'Mancini', score: 0.78 },
+      { payload: 'Schifrin', score: 0.55 },
+    ]);
+    const engine = new QdrantSearchEngine(mockClient);
+
+    const results = await engine.searchSimilar(mockTargetFeatures, 0);
+
+    expect(results.length).toBeGreaterThan(0);
+    results.forEach((result) => {
+      expect(result).toHaveProperty('score');
+      expect(typeof result.score).toBe('number');
+      expect(result.score).toBeGreaterThan(0);
+    });
+  });
+
+  // ── Límite personalizado en búsqueda ──
+
+  it('debe invocar al cliente con el límite por defecto si no se especifica', async () => {
+    const mockClient = createMockClient([{ payload: 'Ogerman', score: 0.9 }]);
+    const engine = new QdrantSearchEngine(mockClient);
+
+    await engine.searchSimilar(mockTargetFeatures);
+
+    expect(mockClient.search).toHaveBeenCalledWith(expect.any(String), {
+      vector: mockTargetFeatures,
+      limit: 5,
+    });
+  });
+
+  // ── Indexación exitosa de un nuevo arreglista ──
+
+  it('debe indexar un nuevo vector exitosamente a través del cliente', async () => {
+    const upsertMock = vi.fn().mockResolvedValue(undefined);
+    const searchMock = vi.fn().mockResolvedValue([]);
+    const mockClient: VectorDatabaseClient = {
+      search: searchMock,
+      upsert: upsertMock,
+    };
+
+    const newVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
+    const newPayload = { name: 'New Arranger', style: 'Jazz' };
+
+    await mockClient.upsert!('arrangements_collection', [
+      { id: 1, vector: newVector, payload: newPayload },
+    ]);
+
+    expect(upsertMock).toHaveBeenCalledTimes(1);
+    expect(upsertMock).toHaveBeenCalledWith('arrangements_collection', [
+      expect.objectContaining({
+        id: 1,
+        vector: newVector,
+        payload: newPayload,
+      }),
+    ]);
+
+    // Verify the indexed vector can be searched
+    searchMock.mockResolvedValue([
+      { payload: newPayload, score: 0.95, id: 1 },
+    ]);
+    const engine = new QdrantSearchEngine(mockClient);
+    const results = await engine.searchSimilar(newVector);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].arranger).toBe('New Arranger');
+  });
 });

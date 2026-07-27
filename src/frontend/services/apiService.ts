@@ -83,8 +83,8 @@ export const apiService = {
 
   async uploadArrangement(file: File): Promise<ArrangerProfile> {
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append('musicFile', file);
+
     const response = await api.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

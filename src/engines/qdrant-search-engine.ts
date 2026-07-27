@@ -65,10 +65,19 @@ export class QdrantSearchEngine {
 
     return response
       .filter((hit) => hit.score >= threshold)
-      .map((hit) => ({
-        arranger: typeof hit.payload === 'string' ? hit.payload : String(hit.payload),
-        score: hit.score,
-      }));
+      .map((hit) => {
+        const payload = hit.payload as Record<string, unknown> | null | undefined;
+        const arranger =
+          (payload && typeof payload.name === 'string' && payload.name) ||
+          (typeof hit.payload === 'string' ? hit.payload : null) ||
+          (payload && typeof payload.id === 'string' ? payload.id : null) ||
+          'Unknown';
+        return {
+          arranger,
+          score: hit.score,
+          matchedDimension: typeof payload?.matchedDimension === 'string' ? payload.matchedDimension : undefined,
+        };
+      });
   }
 
   /**

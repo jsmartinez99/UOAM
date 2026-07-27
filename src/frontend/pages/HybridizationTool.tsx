@@ -190,6 +190,9 @@ export default function HybridizationTool() {
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: 'rgba(255,255,255,0.05)',
               },
+              '& input[type="text"]': {
+                display: 'none !important',
+              },
               bgcolor: 'rgba(10, 11, 16, 0.3)',
             }}
           >

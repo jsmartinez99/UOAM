@@ -19,7 +19,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: { id: string; email: string; role: string };
-      musicFile?: { buffer: Buffer; mimetype: string; originalname: string };
     }
   }
 }
@@ -104,9 +103,27 @@ export function createArrangerController(
    * /api/v1/arrangers:
    *   get:
    *     summary: Obtiene todos los arreglistas
+   *     description: Retorna el catálogo completo de perfiles con sus firmas 6D.
    *     responses:
-   *       200:
+   *       '200':
    *         description: Lista de arreglistas
+   *   post:
+   *     summary: Crea un nuevo arreglista en el catálogo
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [name, dimensions]
+   *             properties:
+   *               name: { type: string }
+   *               dimensions: { $ref: '#/components/schemas/Dimensions6D' }
+   *     responses:
+   *       '201':
+   *         description: Perfil creado
+   *       '400':
+   *         description: Validación fallida
    */
    async function getAllArrangers(_req: Request, res: Response): Promise<Response> {
      try {
@@ -151,6 +168,37 @@ export function createArrangerController(
 
   // ── Hibridación ──
 
+  /**
+   * @swagger
+   * /api/v1/hybridize:
+   *   post:
+   *     summary: Combina perfiles de arreglistas en un perfil híbrido
+   *     description: Fusiona las firmas 6D de dos o más arreglistas usando el motor AST.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [profileIds]
+   *             properties:
+   *               profileIds:
+   *                 type: array
+   *                 items: { type: string }
+   *                 minItems: 2
+   *     responses:
+   *       '200':
+   *         description: Perfil híbrido generado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 mergedProfile: { $ref: '#/components/schemas/Dimensions6D' }
+   *                 resolutionLog: { type: array, items: { type: string } }
+   *       '400':
+   *         description: Se requieren al menos 2 perfiles válidos
+   */
    async function hybridizeProfiles(req: Request, res: Response): Promise<Response> {
      try {
        const { profileIds } = req.body;
@@ -185,6 +233,38 @@ export function createArrangerController(
 
   // ── Búsqueda semántica ──
 
+  /**
+   * @swagger
+   * /api/v1/search:
+   *   post:
+   *     summary: Búsqueda por similitud vectorial KNN
+   *     description: Devuelve los K arreglistas más similares a un vector de embedding.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [vector]
+   *             properties:
+   *               vector:
+   *                 type: array
+   *                 items: { type: number }
+   *                 minItems: 6
+   *     responses:
+   *       '200':
+   *         description: Lista de coincidencias ordenadas por score
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   arranger: { type: string }
+   *                   score: { type: number }
+   *                   matchedDimension: { type: string }
+   */
    async function searchSimilar(req: Request, res: Response): Promise<Response> {
      try {
        const { vector } = req.body;
@@ -198,6 +278,39 @@ export function createArrangerController(
 
   // ── Análisis LLM ──
 
+  /**
+   * @swagger
+   * /api/v1/analyze:
+   *   post:
+   *     summary: Genera un análisis RAG contextual
+   *     description: Genera un reporte usando el LLM con un contexto RAG pre-recuperado.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [context]
+   *             properties:
+   *               context:
+   *                 type: object
+   *                 required: [arranger, confidence, matchedDimension]
+   *                 properties:
+   *                   arranger: { type: string }
+   *                   confidence: { type: number, minimum: 0, maximum: 1 }
+   *                   matchedDimension: { type: string }
+   *     responses:
+   *       '200':
+   *         description: Reporte de análisis generado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 content: { type: string }
+   *                 context: { type: object }
+   *                 generatedAt: { type: string, format: date-time }
+   */
    async function generateAnalysis(req: Request, res: Response): Promise<Response> {
      try {
        const { context } = req.body;
@@ -211,6 +324,28 @@ export function createArrangerController(
 
   // ── Autenticación ──
 
+  /**
+   * @swagger
+   * /api/v1/auth/register:
+   *   post:
+   *     summary: Registra un nuevo usuario
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [email, password]
+   *             properties:
+   *               email: { type: string, format: email }
+   *               password: { type: string, minLength: 8 }
+   *               role: { type: string, enum: [STANDARD, ARRANGER, ADMIN] }
+   *     responses:
+   *       '201':
+   *         description: Usuario creado
+   *       '400':
+   *         description: Validación fallida
+   */
    async function registerUser(req: Request, res: Response): Promise<Response> {
      try {
        const { email, password, role } = req.body;
@@ -222,6 +357,27 @@ export function createArrangerController(
      }
    }
 
+  /**
+   * @swagger
+   * /api/v1/auth/login:
+   *   post:
+   *     summary: Autentica y devuelve un JWT
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [email, password]
+   *             properties:
+   *               email: { type: string }
+   *               password: { type: string }
+   *     responses:
+   *       '200':
+   *         description: Token JWT y datos del usuario
+   *       '401':
+   *         description: Credenciales inválidas
+   */
    async function loginUser(req: Request, res: Response): Promise<Response> {
      try {
        const { email, password } = req.body;
@@ -249,13 +405,35 @@ export function createArrangerController(
 
   // ── Ingesta de archivos musicales ──
 
-    async function uploadArrangement(req: Request, res: Response): Promise<Response> {
+  /**
+   * @swagger
+   * /api/v1/upload:
+   *   post:
+   *     summary: Sube un archivo MusicXML o MIDI para extraer firma 6D
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               musicFile:
+   *                 type: string
+   *                 format: binary
+   *     responses:
+   *       '201':
+   *         description: Perfil creado a partir del archivo
+   *       '400':
+   *         description: Formato no soportado o archivo ausente
+   */
+     async function uploadArrangement(req: Request, res: Response): Promise<Response> {
       try {
-        if (!req.musicFile) {
+        const file = req.file;
+        if (!file) {
           return res.status(400).json({ error: 'No se proporcionó archivo' });
         }
 
-        const result = await MusicFileAnalyzer.analyze(req.musicFile.buffer, req.musicFile.mimetype, req.musicFile.originalname);
+        const result = await MusicFileAnalyzer.analyze(file.buffer, file.mimetype, file.originalname);
 
        // Crear perfil con nombre sugerido
        const suggestedName = MusicFileAnalyzer.suggestName(result.dimensions, result.metadata);

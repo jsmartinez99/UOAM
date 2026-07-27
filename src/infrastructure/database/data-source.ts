@@ -1,9 +1,7 @@
 import { DataSource } from 'typeorm';
 import { config } from '../../config.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { ArrangerProfileEntity } from './entities/arranger-profile.entity.js';
+import { UserEntity } from './entities/user.entity.js';
 
 const isPostgres = config.databaseUrl.startsWith('postgres');
 
@@ -12,7 +10,7 @@ export const AppDataSource = new DataSource(
     ? {
         type: 'postgres',
         url: config.databaseUrl,
-        entities: [path.join(__dirname, 'entities', '*{.js,.ts}')],
+        entities: [ArrangerProfileEntity, UserEntity],
         synchronize: true,
         logging: false,
         ssl: false,
@@ -21,8 +19,10 @@ export const AppDataSource = new DataSource(
         type: 'better-sqlite3',
         database: ':memory:',
         dropSchema: true,
-        entities: [path.join(__dirname, 'entities', '*{.js,.ts}')],
+        entities: [ArrangerProfileEntity, UserEntity],
         synchronize: true,
         logging: false,
       }
 );
+
+export { ArrangerProfileEntity, UserEntity };

@@ -1,4 +1,7 @@
 import { AppDataSource } from './data-source.js';
+import { seedDatabase } from './seed.js';
+import { QdrantAdapter } from '../qdrant/qdrant-client.js';
+import { logger } from '../logger.js';
 
 class DatabaseInitializer {
   private static instance: DatabaseInitializer;
@@ -7,7 +10,7 @@ class DatabaseInitializer {
 
   private constructor() {
     this.initializationPromise = AppDataSource.initialize()
-      .then(() => {
+      .then(async () => {
         this.isInitialized = true;
         console.log('Database initialized successfully');
       })
@@ -26,6 +29,15 @@ class DatabaseInitializer {
 
   public async ensureInitialized(): Promise<void> {
     await this.initializationPromise;
+  }
+
+  public async ensureSeeded(qdrant?: QdrantAdapter): Promise<void> {
+    await this.initializationPromise;
+    try {
+      await seedDatabase(qdrant);
+    } catch (err) {
+      logger.error('Seed failed', err as Error);
+    }
   }
 
   public isDatabaseInitialized(): boolean {

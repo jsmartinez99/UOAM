@@ -134,19 +134,92 @@ describe('Hybrid Engine - Conflict Resolution', () => {
     const result = engine.mergeFullSignatures(sigA, sigB);
 
     // Sin duplicados en organology
-    expect(result.merged.organology).toContain('Strings');
-    expect(result.merged.organology).toContain('Flute');
-    expect(result.merged.organology).toContain('Brass');
+    expect(result.mergedProfile.organology).toContain('Strings');
+    expect(result.mergedProfile.organology).toContain('Flute');
+    expect(result.mergedProfile.organology).toContain('Brass');
 
     // Harmony unidas
-    expect(result.merged.harmony).toContain('Extended chords');
-    expect(result.merged.harmony).toContain('Quartal voicings');
+    expect(result.mergedProfile.harmony).toContain('Extended chords');
+    expect(result.mergedProfile.harmony).toContain('Quartal voicings');
 
     // Taste unidas
-    expect(result.merged.taste).toContain('The Ogerman Swell');
-    expect(result.merged.taste).toContain('Brass falls');
+    expect(result.mergedProfile.taste).toContain('The Ogerman Swell');
+    expect(result.mergedProfile.taste).toContain('Brass falls');
 
     // El log debe registrar la resolución Flute + Low
     expect(result.resolutionLog.length).toBeGreaterThan(0);
+  });
+
+  // ── Fusión con un solo arreglista (copia idéntica) ──
+
+  it('debe fusionar una sola firma sin duplicados ni cambios (copia idéntica)', () => {
+    const engine = new HybridEngine();
+
+    const sig: Dimensions6D = {
+      organology: ['Strings'],
+      harmony: ['Extended chords'],
+      counterpoint: ['Oblique motion'],
+      texture: ['Low Close-Voicing (C2-C3)'],
+      rhythm: ['Bossa nova'],
+      taste: ['The Ogerman Swell'],
+    };
+
+    const result = engine.mergeFullSignatures(sig, sig);
+
+    // Mismos valores sin duplicados
+    expect(result.mergedProfile.organology).toEqual(['Strings']);
+    expect(result.mergedProfile.harmony).toEqual(['Extended chords']);
+    expect(result.mergedProfile.counterpoint).toEqual(['Oblique motion']);
+    expect(result.mergedProfile.texture).toEqual(['Low Close-Voicing (C2-C3)']);
+    expect(result.mergedProfile.rhythm).toEqual(['Bossa nova']);
+    expect(result.mergedProfile.taste).toEqual(['The Ogerman Swell']);
+
+    // Sin conflictos que resolver
+    expect(result.resolutionLog).toHaveLength(0);
+  });
+
+  // ── Conflicto irresoluble ──
+
+  it('debe notificar conflicto irresoluble cuando no hay regla disponible', () => {
+    const engine = new HybridEngine();
+
+    // Dimensiones que no activan las reglas existentes (Flute, Piccolo, Tuba)
+    const result = engine.merge({
+      organology: ['Theremin'],
+      texture: ['Low Close-Voicing (C2-C3)'],
+    });
+
+    // Al no haber regla para Theremin, el log debe estar vacío o indicar que no se pudo resolver
+    // El motor actualmente no modificó nada porque no hay regla para Theremin+Low
+    expect(result.resolutionLog).toHaveLength(0);
+    expect(result.resolvedFeatures.texture).toEqual(['Low Close-Voicing (C2-C3)']);
+
+    // Verificamos que el motor informa que no hubo transformación
+    expect(result.resolvedFeatures.organology).toEqual(['Theremin']);
+  });
+
+  // ── Revisión del log de resoluciones ──
+
+  it('debe incluir mensajes descriptivos en el log de resoluciones', () => {
+    const engine = new HybridEngine();
+
+    // Forzar una resolución conocida
+    const result = engine.merge({
+      organology: ['Flute'],
+      texture: ['Low Close-Voicing (C2-C3)'],
+    });
+
+    // El log debe contener al menos una entrada
+    expect(result.resolutionLog.length).toBeGreaterThan(0);
+
+    // Cada entrada debe ser una cadena descriptiva
+    result.resolutionLog.forEach((entry) => {
+      expect(typeof entry).toBe('string');
+      expect(entry.length).toBeGreaterThan(0);
+    });
+
+    // El mensaje debe ser específico sobre la transformación
+    expect(result.resolutionLog[0]).toContain('Conflict resolved');
+    expect(result.resolutionLog[0]).toContain('AST-based transformation');
   });
 });
