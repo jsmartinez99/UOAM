@@ -4,7 +4,7 @@
  * Ciclo: RED → GREEN → REFACTOR
  * Verifica registro, autorización RBAC y validaciones de seguridad.
  */
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
 import { UserService } from '../../src/services/user.service';
 import { AppDataSource } from '../../src/infrastructure/database/data-source';
@@ -113,6 +113,21 @@ describe('UserService', () => {
     it('debe devolver undefined para emails inexistentes', async () => {
       const verified = await service.verifyCredentials('noexist_' + Date.now() + '@example.com', 'SomePass123!');
       expect(verified).toBeUndefined();
+    });
+
+    it('debe devolver undefined y loguear error cuando la DB falla', async () => {
+      // Forzar inicialización lazy del repository
+      const repo = service['userRepository'];
+      // Mockear el repo para que lance excepción
+      const originalFindOneBy = repo.findOneBy.bind(repo);
+      repo.findOneBy = vi.fn().mockRejectedValue(new Error('DB connection lost'));
+
+      const verified = await service.verifyCredentials('any@example.com', 'any');
+
+      expect(verified).toBeUndefined();
+
+      // Restaurar
+      repo.findOneBy = originalFindOneBy;
     });
   });
 

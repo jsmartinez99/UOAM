@@ -51,4 +51,17 @@ describe('LLM Factory', () => {
     if (originalV) process.env.VITEST = originalV;
     if (originalN) process.env.NODE_ENV = originalN;
   });
+
+  it('debe hacer fallback a "ollama" en producción sin LLM_PROVIDER explícito', () => {
+    const originalV = process.env.VITEST;
+    const originalL = process.env.LLM_PROVIDER;
+    const originalN = process.env.NODE_ENV;
+    delete process.env.VITEST;
+    delete process.env.LLM_PROVIDER;
+    process.env.NODE_ENV = 'production';
+    expect(resolveLLMProvider()).toBe('ollama');
+    process.env.LLM_PROVIDER = originalL;
+    if (originalV) process.env.VITEST = originalV;
+    if (originalN) process.env.NODE_ENV = originalN;
+  });
 });

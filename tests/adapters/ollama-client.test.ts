@@ -157,5 +157,37 @@ describe('OllamaLLMClient', () => {
       expect(result.ok).toBe(false);
       expect(result.error).toBe('ECONNREFUSED');
     });
+
+    it('debe enviar header Authorization cuando hay apiKey', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ models: [{ name: 'qwen2.5:3b' }] }),
+      });
+
+      const client = new OllamaLLMClient({ baseUrl: 'http://test', model: 'qwen2.5:3b', timeoutMs: 5000, apiKey: 'secret-key' });
+      await client.healthCheck();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://test/api/tags',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer secret-key',
+          }),
+        }),
+      );
+    });
+
+    it('no debe enviar header Authorization cuando NO hay apiKey', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ models: [{ name: 'qwen2.5:3b' }] }),
+      });
+
+      const client = new OllamaLLMClient({ baseUrl: 'http://test', model: 'qwen2.5:3b', timeoutMs: 5000 });
+      await client.healthCheck();
+
+      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as { headers: Record<string, string> } | undefined;
+      expect(callArgs?.headers.Authorization).toBeUndefined();
+    });
   });
 });

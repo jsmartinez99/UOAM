@@ -12,11 +12,15 @@ type AnyRule = Rule<NoteNode> | Rule<ChordNode> | Rule<ContainerNode>;
 export class RuleEngine implements ASTVisitor<BaseNode> {
   private readonly rules: Map<NodeKind, AnyRule[]>;
 
-  constructor(rules: Map<NodeKind, AnyRule> | Map<string, AnyRule>) {
+  constructor(rules: Map<NodeKind, AnyRule | AnyRule[]> | Map<string, AnyRule | AnyRule[]>) {
     this.rules = new Map();
     for (const [key, rule] of rules.entries()) {
       const existing = this.rules.get(key as NodeKind) ?? [];
-      existing.push(rule);
+      if (Array.isArray(rule)) {
+        existing.push(...rule);
+      } else {
+        existing.push(rule);
+      }
       this.rules.set(key as NodeKind, existing);
     }
   }

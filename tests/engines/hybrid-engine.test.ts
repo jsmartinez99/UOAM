@@ -40,6 +40,23 @@ describe('Hybrid Engine - Conflict Resolution', () => {
     expect(result.resolvedFeatures.texture).toEqual(['Medium Close-Voicing (C4-C5)']);
   });
 
+  // ── Sin conflictos (multi-dimensión) ──
+
+  it('debe preservar features originales cuando ninguna dimensión entra en conflicto AST', () => {
+    const engine = new HybridEngine();
+    // Sin Piccolo/Tuba/Flute, el motor pasa el AST sin transformar y los
+    // features originales se preservan (cubre la rama log vacío).
+    const result = engine.merge({
+      organology: ['Violin', 'Cello'],
+      texture: ['Standard'],
+    });
+
+    expect(result.resolvedFeatures.organology).toEqual(['Violin', 'Cello']);
+    expect(result.resolvedFeatures.texture).toEqual(['Standard']);
+    expect(result.resolutionLog).toHaveLength(0);
+  });
+
+
   // ── Piccolo + Low Register ──
 
   it('debe transponer a High register cuando se usa Piccolo con texturas graves', () => {
@@ -102,9 +119,9 @@ describe('Hybrid Engine - Conflict Resolution', () => {
   // ── Reglas customizadas (extensibilidad via Strategy) ──
 
   it('debe aceptar reglas de conflicto personalizadas', () => {
-    // Nota: El motor AST actual usa un registro fijo en el constructor, 
+    // Nota: El motor AST actual usa un registro fijo en el constructor,
     // por lo que este test requiere ajustar el HybridEngine para aceptar reglas dinámicas.
-    // Saltamos este test por ahora o ajustamos la implementación.
+    // Saltamos este test por ahora o ajustamos la implementacion.
     expect(true).toBe(true);
   });
 
