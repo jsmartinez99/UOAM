@@ -3,6 +3,13 @@ import { seedDatabase } from './seed.js';
 import { QdrantAdapter } from '../qdrant/qdrant-client.js';
 import { logger } from '../logger.js';
 
+/**
+ * Inicializa la base de datos TypeORM.
+ *
+ * Implementa el patrón Singleton: una sola instancia compartida en toda la app.
+ * La inicialización se inicia en el constructor y se completa asíncronamente.
+ * ensureInitialized() / ensureSeeded() esperan a que termine.
+ */
 class DatabaseInitializer {
   private static instance: DatabaseInitializer;
   private isInitialized = false;
@@ -12,10 +19,14 @@ class DatabaseInitializer {
     this.initializationPromise = AppDataSource.initialize()
       .then(async () => {
         this.isInitialized = true;
-        console.log('Database initialized successfully');
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('Database initialized successfully');
+        }
       })
-      .catch(error => {
-        console.error('Error initializing database:', error);
+      .catch((error) => {
+        if (process.env.NODE_ENV !== 'test') {
+          console.error('Error initializing database:', error);
+        }
         throw error;
       });
   }
@@ -46,3 +57,4 @@ class DatabaseInitializer {
 }
 
 export const databaseInitializer = DatabaseInitializer.getInstance();
+export { DatabaseInitializer };

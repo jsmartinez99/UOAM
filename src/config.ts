@@ -1,9 +1,14 @@
 import dotenv from 'dotenv';
 import { logger } from './infrastructure/logger.js';
 
-dotenv.config();
-
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+
+// Cargar .env.test primero (si existe y estamos en test), luego .env como fallback
+if (isTest) {
+  dotenv.config({ path: '.env.test', override: true });
+} else {
+  dotenv.config();
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];

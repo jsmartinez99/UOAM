@@ -10,7 +10,6 @@
 import bcrypt from 'bcryptjs';
 import { AppDataSource } from './data-source.js';
 import { ArrangerProfileEntity } from './entities/arranger-profile.entity.js';
-import { UserEntity } from './entities/user.entity.js';
 import { QdrantAdapter } from '../qdrant/qdrant-client.js';
 import { logger } from '../logger.js';
 
@@ -104,29 +103,22 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
     // Already initialized
   }
 
-  const userRepo = AppDataSource.getRepository(UserEntity);
   const arrangerRepo = AppDataSource.getRepository(ArrangerProfileEntity);
 
-  // ── Demo users ──
+  // ── Demo users (idempotent via ON CONFLICT) ──
   for (const demo of DEMO_USERS) {
-    const existing = await userRepo.findOneBy({ email: demo.email });
-    if (existing) {
-      const matches = await bcrypt.compare(demo.password, existing.hashedPassword);
-      if (!matches) {
-        existing.hashedPassword = await bcrypt.hash(demo.password, 12);
-        await userRepo.save(existing);
-        logger.info(`[seed] Updated password for ${demo.email}`);
-      }
-      continue;
-    }
     const hashedPassword = await bcrypt.hash(demo.password, 12);
-    const user = userRepo.create({
-      email: demo.email,
-      hashedPassword,
-      role: demo.role,
-    });
-    await userRepo.save(user);
-    logger.info(`[seed] Created demo user ${demo.email} (${demo.role})`);
+    // Use raw upsert for atomicity — avoids race between findOneBy and save.
+    // gen_random_uuid() is built into Postgres 13+ (no extension needed).
+    await AppDataSource.manager.query(
+      `INSERT INTO users (id, email, "hashedPassword", role, "createdAt")
+       VALUES (gen_random_uuid(), $1, $2, $3, NOW())
+       ON CONFLICT (email) DO UPDATE
+         SET "hashedPassword" = EXCLUDED."hashedPassword"
+         WHERE users."hashedPassword" IS DISTINCT FROM EXCLUDED."hashedPassword"`,
+      [demo.email, hashedPassword, demo.role],
+    );
+    logger.info(`[seed] Upserted demo user ${demo.email} (${demo.role})`);
   }
 
   // ── Arranger profiles ──
@@ -152,7 +144,7 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
         Array.isArray(d) ? d.length : 0,
       );
       try {
-        await qdrant.upsert('arrangements_collection', [
+        await qdrant.upsert(process.env.QDRANT_COLLECTION || 'arrangements_collection', [
           {
             id: profile.id,
             vector: vec,

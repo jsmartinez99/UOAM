@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Set process.env vars for tests (loaded before any source code)
+  // Note: the `env` block in Vitest only affects import.meta.env, not process.env.
+  // Source code reads process.env, so we set it here and also via setupFiles.
   esbuild: {
     target: 'es2022',
     tsconfigRaw: {
@@ -15,6 +18,16 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    globalSetup: ['./tests/global-setup.ts'],
+    setupFiles: ['./tests/setup-env.ts'],
+    // Vitest 4: poolOptions moved to top-level test options
+    // Single fork to avoid DB connection issues with singleton AppDataSource
+    pool: 'forks',
+    fileParallelism: false,
+    // Tests within a file run sequentially
+    sequence: {
+      concurrent: false,
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -30,10 +43,10 @@ export default defineConfig({
         'src/infrastructure/qdrant/qdrant-client.ts',
       ],
       thresholds: {
-        branches: 50,
-        functions: 50,
-        lines: 50,
-        statements: 50,
+        branches: 65,
+        functions: 85,
+        lines: 80,
+        statements: 80,
       },
     },
   },

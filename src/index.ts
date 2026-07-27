@@ -1,15 +1,17 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { createArrangerController, authenticateToken } from './backend/controllers.js';
-import { config } from './config.js';
-import { QdrantAdapter } from './infrastructure/qdrant/qdrant-client.js';
-import { logger } from './infrastructure/logger.js';
-import { databaseInitializer } from './infrastructure/database/database-initializer.js';
-import { swaggerSpec } from './api/swagger.js';
-import type { LLMClient } from './ports/llm-client.port.js';
+import { config } from './config';
+import { QdrantAdapter } from './infrastructure/qdrant/qdrant-client';
+import { logger } from './infrastructure/logger';
+import { databaseInitializer } from './infrastructure/database/database-initializer';
+import { swaggerSpec } from './api/swagger';
+import { createLLMClient, resolveLLMProvider } from './adapters/llm/llm-factory';
+import { OllamaLLMClient } from './adapters/llm/ollama-client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,7 +38,8 @@ async function bootstrap(): Promise<void> {
   logger.info('Database initialized');
 
   const qdrantAdapter = new QdrantAdapter();
-  await qdrantAdapter.ensureCollection('arrangements_collection', 6);
+  const collection = process.env.QDRANT_COLLECTION || 'arrangements_collection';
+  await qdrantAdapter.ensureCollection(collection, 6);
   logger.info('Qdrant collection ready');
 
   await databaseInitializer.ensureSeeded(qdrantAdapter);
@@ -44,9 +47,22 @@ async function bootstrap(): Promise<void> {
 
   const dependencies = {
     qdrantClient: qdrantAdapter,
-    llmClient: { generateText: async () => 'Mock analysis' } as LLMClient,
+    llmClient: createLLMClient(),
     jwtSecret: config.jwtSecret,
   };
+
+  // Health check del LLM (no bloqueante)
+  if (dependencies.llmClient instanceof OllamaLLMClient) {
+    dependencies.llmClient.healthCheck().then((h) => {
+      if (h.ok) {
+        logger.info(`LLM ready: Ollama model=${h.model}`);
+      } else {
+        logger.warn(`LLM unavailable: ${h.error}. Falling back to mock.`);
+      }
+    });
+  } else {
+    logger.info(`LLM provider: ${resolveLLMProvider()}`);
+  }
 
   const controller = createArrangerController(dependencies);
   const auth = authenticateToken(dependencies);
@@ -67,7 +83,20 @@ async function bootstrap(): Promise<void> {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  app.use(express.static(path.join(__dirname, '../dist/public')));
+  // Serve static files for frontend - only for non-API routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/api-docs')) {
+      return next();
+    }
+    // Manually serve static files
+    const staticPath = path.join(__dirname, '../dist/public', req.path);
+    if (fs.existsSync(staticPath) && fs.statSync(staticPath).isFile()) {
+      return res.sendFile(staticPath);
+    }
+    next();
+  });
+
+  // Serve index.html for all non-API routes (SPA routing)
   app.use((_req, res) => {
     res.sendFile(path.join(__dirname, '../dist/public/index.html'));
   });

@@ -16,6 +16,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "allowImportingTsExtensions": true,
+    "sourceMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,

@@ -4,6 +4,12 @@ import { SymbolicIngestorImpl } from '../../src/infrastructure/ingestors/symboli
 import { FeatureExtractionService } from '../../src/services/feature-extraction.service';
 import { QdrantSearchEngine } from '../../src/engines/qdrant-search-engine';
 import { VectorDatabaseClient } from '../../src/ports/vector-database.port';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const fixturePath = join(__dirname, '..', 'fixtures', 'sample.musicxml');
 
 describe('MusicIngestionService Integration', () => {
   it('debe ejecutar el flujo completo de ingesta', async () => {
@@ -14,7 +20,7 @@ describe('MusicIngestionService Integration', () => {
     
     const service = new MusicIngestionService(ingestor, extractor, searchEngine);
     
-    const profile = await service.ingest('path/to/valid.musicxml', 'Test Arranger');
+    const profile = await service.ingest(fixturePath, 'Test Arranger');
     
     expect(profile.name).toBe('Test Arranger');
     expect(profile.dimensions.organology).toBeDefined();

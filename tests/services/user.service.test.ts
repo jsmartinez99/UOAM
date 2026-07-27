@@ -4,7 +4,8 @@
  * Ciclo: RED → GREEN → REFACTOR
  * Verifica registro, autorización RBAC y validaciones de seguridad.
  */
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import jwt from 'jsonwebtoken';
 import { UserService } from '../../src/services/user.service';
 import { AppDataSource } from '../../src/infrastructure/database/data-source';
 import { UserEntity } from '../../src/infrastructure/database/entities/user.entity';
@@ -18,14 +19,14 @@ describe('UserService', () => {
     }
   });
 
-  afterAll(async () => {
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
-    }
-  });
+  // No afterAll destroy: AppDataSource es singleton compartido con otros tests
 
   beforeEach(async () => {
     service = new UserService();
+    await AppDataSource.getRepository(UserEntity).clear();
+  });
+
+  afterEach(async () => {
     await AppDataSource.getRepository(UserEntity).clear();
   });
 
@@ -96,6 +97,62 @@ describe('UserService', () => {
     it('debe devolver undefined para emails inexistentes', async () => {
       const verified = await service.verifyCredentials('noexist_' + Date.now() + '@example.com', 'SomePass123!');
       expect(verified).toBeUndefined();
+    });
+  });
+
+  // ── Login exitoso genera token ──
+
+  describe('Token generation', () => {
+    it('debe generar un token JWT tras verificar credenciales', async () => {
+      const email = 'token_' + Date.now() + '@example.com';
+      const pass = 'SecurePass123!';
+      await service.registerUser(email, pass);
+
+      const user = await service.verifyCredentials(email, pass);
+      expect(user).toBeDefined();
+
+      // Firmar el token como lo haría el controlador
+      const secret = 'test-jwt-secret';
+      const token = jwt.sign(
+        { id: user!.id, email: user!.email, role: user!.role },
+        secret,
+        { expiresIn: '1h' },
+      );
+
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+
+      // Verificar que el token contiene los claims correctos
+      const decoded = jwt.verify(token, secret) as { id: string; email: string; role: string };
+      expect(decoded.email).toBe(email.toLowerCase());
+      expect(decoded.role).toBe('STANDARD');
+    });
+  });
+
+  // ── Usuario ADMIN accede a recurso de administración ──
+
+  describe('ADMIN access', () => {
+    it('debe permitir que ADMIN registre otro ADMIN', async () => {
+      const adminEmail = 'admin_main_' + Date.now() + '@example.com';
+      const newAdminEmail = 'new_admin_' + Date.now() + '@example.com';
+
+      // Registrar un ADMIN
+      await service.registerUser(adminEmail, 'AdminPass123!', 'ADMIN');
+
+      // Registrar otro ADMIN (simulando que un ADMIN puede crear más admins)
+      const newAdmin = await service.registerUser(newAdminEmail, 'AdminPass456!', 'ADMIN');
+      expect(newAdmin.role).toBe('ADMIN');
+      expect(newAdmin.email).toBe(newAdminEmail.toLowerCase());
+    });
+
+    it('debe permitir que ADMIN acceda a recursos de gestión de usuarios', () => {
+      expect(service.authorize('ADMIN', 'users:manage')).toBe(true);
+      expect(service.authorize('ADMIN', 'system:config')).toBe(true);
+    });
+
+    it('debe rechazar que STANDARD acceda a recursos de gestión de usuarios', () => {
+      expect(() => service.authorize('STANDARD', 'users:manage')).toThrow();
+      expect(() => service.authorize('STANDARD', 'system:config')).toThrow();
     });
   });
 
