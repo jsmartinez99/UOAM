@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "title": "Symphony No. 1 - First Movement",
+    "composer": "Example Composer",
+    "time_signature": "4/4",
+    "global_tempo_bpm": 120,
+    "duration_seconds": 240,
+    "tolerance": {
+      "boundary_measures": 1,
+      "dynamic_lufs": 3,
+      "harmonic_similarity": 0.7
+    }
+  },
+  "sections": [
+    {
+      "id": "intro",
+      "label": "Intro",
+      "start_measure": 1,
+      "end_measure": 8,
+      "tempo_bpm": 120,
+      "time_signature": "4/4",
+      "dynamics": "pp",
+      "dynamics_percent": 20,
+      "instrumentation": ["horn", "trumpet", "trombone", "tuba"],
+      "density_percent": 20,
+      "harmonic_content": {
+        "progression": ["I", "V7", "I", "V7"],
+        "key": "C",
+        "mode": "major",
+        "cadence_type": "half",
+        "fade_out": false
+      }
+    },
+    {
+      "id": "exposition",
+      "label": "Exposition",
+      "start_measure": 9,
+      "end_measure": 24,
+      "tempo_bpm": 120,
+      "time_signature": "4/4",
+      "dynamics": "mp",
+      "dynamics_percent": 45,
+      "instrumentation": ["violin", "viola", "cello", "double_bass", "flute", "oboe", "clarinet", "bassoon", "horn"],
+      "density_percent": 50,
+      "harmonic_content": {
+        "progression": ["I", "vi", "IV", "V7", "I", "V7/vi", "vi", "IV", "V7"],
+        "key": "C",
+        "mode": "major",
+        "cadence_type": "authentic",
+        "fade_out": false
+      }
+    },
+    {
+      "id": "development",
+      "label": "Development",
+      "start_measure": 25,
+      "end_measure": 40,
+      "tempo_bpm": 116,
+      "time_signature": "4/4",
+      "dynamics": "mf",
+      "dynamics_percent": 60,
+      "instrumentation": ["violin", "viola", "cello", "double_bass", "flute", "oboe", "clarinet", "bassoon", "horn", "trumpet", "trombone", "timpani", "percussion"],
+      "density_percent": 75,
+      "harmonic_content": {
+        "progression": ["vi", "IV", "V7/IV", "IV", "V7/V", "V7", "I", "V7/vi", "vi", "V7/ii", "ii", "V7"],
+        "key": "C",
+        "mode": "major",
+        "cadence_type": "deceptive",
+        "fade_out": false
+      }
+    },
+    {
+      "id": "climax",
+      "label": "Climax",
+      "start_measure": 41,
+      "end_measure": 48,
+      "tempo_bpm": 124,
+      "time_signature": "4/4",
+      "dynamics": "ff",
+      "dynamics_percent": 90,
+      "instrumentation": ["violin", "viola", "cello", "double_bass", "flute", "oboe", "clarinet", "bassoon", "horn", "trumpet", "trombone", "tuba", "timpani", "percussion", "piano"],
+      "density_percent": 95,
+      "harmonic_content": {
+        "progression": ["I", "IV", "V7", "I", "V7", "I", "IV", "V7", "I"],
+        "key": "C",
+        "mode": "major",
+        "cadence_type": "authentic",
+        "fade_out": false
+      }
+    },
+    {
+      "id": "coda",
+      "label": "Coda",
+      "start_measure": 49,
+      "end_measure": 56,
+      "tempo_bpm": 112,
+      "time_signature": "4/4",
+      "dynamics": "ppp",
+      "dynamics_percent": 10,
+      "instrumentation": ["violin", "viola", "cello", "horn"],
+      "density_percent": 15,
+      "harmonic_content": {
+        "progression": ["I", "vi", "ii", "V7", "I"],
+        "key": "C",
+        "mode": "major",
+        "cadence_type": "authentic",
+        "fade_out": true
+      }
+    }
+  ]
+}

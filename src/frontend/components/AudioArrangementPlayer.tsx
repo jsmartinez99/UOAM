@@ -176,8 +176,6 @@ const buildSectionScore = (
   section: ArrangementSection,
   tempoBpm: number,
   timeSig: { beats: number; beatValue: number },
-  scaleMidis: number[],
-  mode: 'major' | 'minor',
 ): { events: NoteEvent[]; sectionDurationSec: number } => {
   const beatsPerBar = timeSig.beats;
   const secondsPerBeat = 60 / tempoBpm;
@@ -189,42 +187,37 @@ const buildSectionScore = (
   const patch = pickInstrumentPatch(section.activeInstruments);
 
   const events: NoteEvent[] = [];
-  const isClimax = section.name === 'Climax';
-  const harmonicDensity = Math.max(1, Math.floor(section.densityCap / 25));
 
-  let t = 0;
-  let barIndex = 0;
-  while (t < sectionDurationSec) {
-    const beatInBar = barIndex % beatsPerBar;
-    const noteDurations: number[] = isClimax
-      ? [secondsPerBeat * 0.5, secondsPerBeat * 0.25]
-      : [secondsPerBeat, secondsPerBeat * 0.5, secondsPerBeat * 0.5];
-
-    const dur = noteDurations[beatInBar % noteDurations.length];
-
-    const chordTones = buildChordTones(scaleMidis, mode, barIndex % scaleMidis.length);
-    const voiceCount = Math.min(harmonicDensity, chordTones.length);
-    for (let v = 0; v < voiceCount; v++) {
-      let midi = chordTones[v];
-      if (v === 0 && barIndex % 4 === 3) {
-        midi = chordTones[0] + 12;
-      }
-      if (v === 1 && section.counterpointMotion === 'contrary') {
-        midi = chordTones[0] - 4;
-      } else if (v === 1 && section.counterpointMotion === 'parallel') {
-        midi = chordTones[1] + 12;
-      }
+  const scoreNotes = section.score?.notes ?? [];
+  if (scoreNotes.length === 0) {
+    const fallbackDur = secondsPerBar;
+    let beatOffset = 0;
+    for (let b = 0; b < bars; b++) {
       events.push({
-        midi,
-        startSec: t,
-        durationSec: Math.min(dur, sectionDurationSec - t),
-        velocity: baseVelocity * (v === 0 ? 1.0 : 0.7),
+        midi: 60,
+        startSec: beatOffset * secondsPerBeat,
+        durationSec: fallbackDur,
+        velocity: baseVelocity,
         patch,
       });
+      beatOffset += beatsPerBar;
     }
+    return { events, sectionDurationSec };
+  }
 
-    t += dur;
-    barIndex++;
+  let beatCursor = 0;
+  for (const note of scoreNotes) {
+    const startSec = beatCursor * secondsPerBeat;
+    const durationSec = note.durationBeats * secondsPerBeat;
+    events.push({
+      midi: note.midi,
+      startSec,
+      durationSec,
+      velocity: baseVelocity * (note.voiceIndex === 0 ? 1.0 : 0.7),
+      patch,
+    });
+    beatCursor += note.durationBeats;
+    if (startSec >= sectionDurationSec) break;
   }
 
   return { events, sectionDurationSec };
@@ -465,8 +458,6 @@ export default function AudioArrangementPlayer({
           section,
           tempoBpm,
           timeSig,
-          scaleMidis,
-          mode,
         );
         const sectionStart = globalStart;
         const remainingBudget = PREVIEW_BUDGET_SEC - previewBudgetUsed;

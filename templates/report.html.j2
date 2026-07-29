@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrangement Audit Report — {{ title }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
+        h1 { color: #c5a059; font-size: 1.8rem; margin-bottom: 0.5rem; }
+        h2 { color: #94a3b8; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid #334155; padding-bottom: 0.3rem; }
+        .meta { color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; }
+        .card h3 { color: #c5a059; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .card .value { font-size: 1.5rem; font-weight: 700; }
+        .pass { color: #22c55e; }
+        .fail { color: #ef4444; }
+        .warn { color: #f59e0b; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+        th { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        .section-pass { background: rgba(34, 197, 94, 0.1); }
+        .section-fail { background: rgba(239, 68, 68, 0.1); }
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pass { background: #22c55e; color: #0f172a; }
+        .badge-fail { background: #ef4444; color: #fff; }
+        .badge-warn { background: #f59e0b; color: #0f172a; }
+        .chord-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+        .chord-tag { background: #334155; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.75rem; font-family: monospace; }
+        .progress-bar { height: 6px; background: #334155; border-radius: 3px; margin-top: 0.3rem; }
+        .progress-fill { height: 100%; border-radius: 3px; }
+        .progress-pass { background: #22c55e; }
+        .progress-fail { background: #ef4444; }
+        .progress-warn { background: #f59e0b; }
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #334155; color: #64748b; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+    <h1>Arrangement Audit Report</h1>
+    <p class="meta">Generated: {{ generated_at }} | Audio: {{ audio_file }} | Schema: {{ schema_file }}</p>
+
+    <div class="summary">
+        <div class="card">
+            <h3>Overall Verdict</h3>
+            <div class="value {{ 'pass' if overall_pass else 'fail' }}">{{ 'PASS' if overall_pass else 'FAIL' }}</div>
+        </div>
+        <div class="card">
+            <h3>Sections Verified</h3>
+            <div class="value">{{ total_sections }}</div>
+        </div>
+        <div class="card">
+            <h3>Pass Rate</h3>
+            <div class="value">{{ pass_rate }}%</div>
+            <div class="progress-bar"><div class="progress-fill {{ 'progress-pass' if pass_rate >= 80 else 'progress-warn' if pass_rate >= 50 else 'progress-fail' }}" style="width: {{ pass_rate }}%"></div></div>
+        </div>
+        <div class="card">
+            <h3>Global Key</h3>
+            <div class="value">{{ global_key }}</div>
+        </div>
+    </div>
+
+    <h2>Section Analysis</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Time</th>
+                <th>Dynamic</th>
+                <th>LUFS</th>
+                <th>RMS</th>
+                <th>Crest</th>
+                <th>Chords</th>
+                <th>Cadence</th>
+                <th>Harmonic Match</th>
+                <th>Verdict</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sec in sections %}
+            <tr class="{{ 'section-pass' if sec.overall_pass else 'section-fail' }}">
+                <td><strong>{{ sec.label }}</strong></td>
+                <td>{{ sec.start_time }}s – {{ sec.end_time }}s</td>
+                <td><span class="badge {{ 'badge-pass' if sec.dynamic_pass else 'badge-fail' }}">{{ sec.declared_dynamic }}</span></td>
+                <td>{{ sec.lufs }} dB</td>
+                <td>{{ sec.rms_db }} dB</td>
+                <td>{{ sec.crest }} dB</td>
+                <td>{{ sec.chord_count }}</td>
+                <td>{{ sec.cadence }}</td>
+                <td>
+                    {% if sec.harmonic_match is not none %}
+                    <span class="badge {{ 'badge-pass' if sec.harmonic_match >= 0.5 else 'badge-warn' if sec.harmonic_match >= 0.3 else 'badge-fail' }}">
+                        {{ (sec.harmonic_match * 100) | int }}%
+                    </span>
+                    {% else %}
+                    <span class="badge badge-warn">N/A</span>
+                    {% endif %}
+                </td>
+                <td><span class="badge {{ 'badge-pass' if sec.overall_pass else 'badge-fail' }}">{{ 'PASS' if sec.overall_pass else 'FAIL' }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if fade_out %}
+    <h2>Fade-Out Analysis</h2>
+    <div class="card">
+        <h3>Coda Fade-Out</h3>
+        <p>Duration: {{ fade_out.duration_s }}s | Level drop: {{ fade_out.level_drop_db }} dB | Start: {{ fade_out.start_level_db }} dB → End: {{ fade_out.end_level_db }} dB</p>
+    </div>
+    {% endif %}
+
+    {% if key_changes %}
+    <h2>Key Changes</h2>
+    <table>
+        <thead><tr><th>Time</th><th>Key</th><th>Mode</th><th>Confidence</th></tr></thead>
+        <tbody>
+            {% for kc in key_changes %}
+            <tr>
+                <td>{{ kc.start_time }}s – {{ kc.end_time }}s</td>
+                <td>{{ kc.key }}</td>
+                <td>{{ kc.mode }}</td>
+                <td>{{ (kc.confidence * 100) | int }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <footer>
+        UOAM Arranger Ecosystem — Audio Analysis Laboratory v1.0 | Ubuntu 24.04 | Sonic Visualiser + Essentia + librosa
+    </footer>
+</body>
+</html>

@@ -3,6 +3,27 @@ import { Box, Card, CardContent, Typography, Chip, LinearProgress, Stack, Button
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 
+export interface ScoreNote {
+  midi: number;
+  durationBeats: number;
+  voiceIndex: number;
+}
+
+export interface ChordEvent {
+  barIndex: number;
+  rootMidi: number;
+  intervals: number[];
+  quality: string;
+  romanNumeral: string;
+}
+
+export interface SectionScore {
+  notes: ScoreNote[];
+  chords: ChordEvent[];
+  melody: ScoreNote[];
+  bassLine: ScoreNote[];
+}
+
 export interface ArrangementSection {
   name: 'Introduction' | 'Exposition' | 'Development' | 'Climax' | 'Coda';
   bars: { start: number; end: number };
@@ -12,6 +33,7 @@ export interface ArrangementSection {
   harmonicTechniques: string[];
   counterpointMotion: 'contrary' | 'oblique' | 'parallel' | 'homophonic';
   aestheticGestures: string[];
+  score: SectionScore;
 }
 
 export interface ArrangementTimelineProps {
@@ -67,6 +89,15 @@ export default function ArrangementTimeline({
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                 Tonalidad: <strong>{keyCenter}</strong> | Tempo: <strong>{tempoBpm} BPM</strong> | Compás: <strong>{timeSignature}</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Progresión global: <strong>
+                  {sections.length > 0
+                    ? sections
+                        .map((s) => s.score.chords.slice(0, 4).map((c) => c.romanNumeral).join(' → '))
+                        .join(' | ')
+                    : '—'}
+                </strong>
               </Typography>
             </Box>
 
