@@ -8,6 +8,9 @@ coverage/
 .playwright-mcp/
 *.bak
 *.ts.bak
+__pycache__/
+*.pyc
+*.pyo
 
 # External repos and audit reports (not part of the project)
 github-mcp-server/

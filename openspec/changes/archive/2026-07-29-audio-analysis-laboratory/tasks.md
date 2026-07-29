@@ -24,7 +24,7 @@
 - [x] 3.3 Implement RMS energy and LUFS computation per section (`src/features/loudness.py`)
 - [x] 3.4 Implement spectral contrast and flatness extraction (`src/features/texture.py`)
 - [x] 3.5 Implement chroma feature extraction for harmonic analysis (`src/features/chroma.py`)
-- [x] 3.6 Create feature extraction CLI `scripts/extract-features.py` with section-aware processing
+- [x] 3.6 Create feature extraction CLI `scripts/extract_features.py` with section-aware processing
 - [x] 3.7 Add unit tests for each feature extractor against known test signals
 
 ## 4. Section Boundary Verification

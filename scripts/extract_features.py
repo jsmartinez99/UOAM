@@ -187,10 +187,10 @@ def main():
         epilog="""
 Examples:
   # Extract features with arrangement schema
-  python scripts/extract-features.py audio.wav arrangement.json -o features.json
+  python scripts/extract_features.py audio.wav arrangement.json -o features.json
   
   # Extract features without arrangement (auto-detect sections)
-  python scripts/extract-features.py audio.wav -o features.json
+  python scripts/extract_features.py audio.wav -o features.json
         """
     )
     

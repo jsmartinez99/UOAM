@@ -21,7 +21,7 @@ except ImportError:
     warnings.warn("essentia not available")
 
 
-def extract_tempo_madmom(audio: np.ndarray, sr: int) -> Tuple[float, np.ndarray:
+def extract_tempo_madmom(audio: np.ndarray, sr: int) -> Tuple[float, np.ndarray]:
     """
     Extract tempo and beat positions using madmom's DBN beat tracker.
     
