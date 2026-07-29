@@ -82,51 +82,294 @@ function ensureNonEmpty(arr: string[], fallback: string[]): string[] {
 
 // ─── Análisis MusicXML ──────────────────────────────────────────────
 
-function analyzeMusicXML(xmlContent: string): Dimensions6D {
-  try {
-    const parser = new XMLParser({ ignoreAttributes: false });
-    const result = parser.parse(xmlContent);
-    const score = result['score-partwise'] || result;
-    
-    const allText = JSON.stringify(score);
-    const partNames = score.partList?.['score-part']?.map((p: { 'part-name'?: { '#text'?: string } }) => p['part-name']?.['#text'] || '') || [];
-    const partNamesText = partNames.join(' ');
+interface MeasureAnalysis {
+  sectionName: string;
+  dynamics: string;
+  instrument: string;
+  measureNumber: number;
+}
 
-    // Extract all text content for pattern matching
-    const fullText = allText + ' ' + partNamesText;
-    
-    return {
-      organology: ensureNonEmpty(
-        extractUnique([
-          ...detectPatterns(fullText, ORGANOLOGY_PATTERNS),
-          ...partNames.map((n: string) => normalizeText(n)).filter(Boolean),
-        ]),
-        ['ensemble']
-      ),
-      harmony: ensureNonEmpty(
-        extractUnique(detectPatterns(fullText, HARMONY_PATTERNS)),
-        ['traditional harmony']
-      ),
-      counterpoint: ensureNonEmpty(
-        extractUnique(detectPatterns(fullText, COUNTERPOINT_PATTERNS)),
-        ['homophonic']
-      ),
-      texture: ensureNonEmpty(
-        extractUnique(detectPatterns(fullText, TEXTURE_PATTERNS)),
-        ['homophonic']
-      ),
-      rhythm: ensureNonEmpty(
-        extractUnique(detectPatterns(fullText, RHYTHM_PATTERNS)),
-        ['straight']
-      ),
-      taste: ensureNonEmpty(
-        extractUnique(detectPatterns(fullText, TASTE_PATTERNS)),
-        ['personal style']
-      ),
+function extractMeasuresFromPart(part: Record<string, unknown>): Record<string, unknown>[] {
+  const raw = part['measure'] as Record<string, unknown>[] | Record<string, unknown> | undefined;
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw];
+}
+
+function extractDirectionWords(dirType: Record<string, unknown>): string {
+  const words = dirType['words'];
+  if (!words) return '';
+  if (typeof words === 'string') return words;
+  if (typeof words === 'object') {
+    const text = (words as Record<string, unknown>)['#text'];
+    return typeof text === 'string' ? text : '';
+  }
+  return '';
+}
+
+function extractDynamics(dirType: Record<string, unknown>): string {
+  const dyn = dirType['dynamics'];
+  if (!dyn || typeof dyn !== 'object') return '';
+  const keys = Object.keys(dyn as Record<string, unknown>).filter(k => !k.startsWith('@_') && k !== '#text');
+  return keys.length > 0 ? keys[0] : '';
+}
+
+function extractInstrumentId(note: Record<string, unknown>): string {
+  const instr = note['instrument'];
+  if (!instr || typeof instr !== 'object') return '';
+  return (instr as Record<string, unknown>)['@_id'] as string || '';
+}
+
+const INSTRUMENT_ID_MAP: Record<string, string> = {
+  'Tenor-Sax': 'Tenor Sax',
+  'Alto-Sax': 'Alto Sax',
+  'Baritone-Sax': 'Baritone Sax',
+  'Soprano-Sax': 'Soprano Sax',
+  'Trumpet': 'Trumpet',
+  'Trombone': 'Trombone',
+  'Bass': 'Double Bass',
+  'Piano': 'Piano',
+  'Guitar': 'Guitar',
+  'Drums': 'Drums',
+  'Percussion': 'Percussion',
+  'Flute': 'Flute',
+  'Clarinet': 'Clarinet',
+  'Horn': 'French Horn',
+  'Tuba': 'Tuba',
+  'Violin': 'Violin',
+  'Viola': 'Viola',
+  'Cello': 'Cello',
+  'Contrabass': 'Contrabass',
+  'Harp': 'Harp',
+};
+
+function getSectionWord(sectionName: string): string {
+  return sectionName.split('(')[0]?.trim() || sectionName;
+}
+
+function parseMeasureRange(sectionWord: string): { sectionName: string; start: number; end: number } | null {
+  const match = sectionWord.match(/Compases\s+(\d+)\s*-\s*(\d+)/i);
+  if (match) {
+    const start = parseInt(match[1], 10);
+    const end = parseInt(match[2], 10);
+    const sectionName = getSectionWord(sectionWord);
+    return { sectionName, start, end };
+  }
+  return null;
+}
+
+function analyzeMusicXML(xmlContent: string): { dimensions: Dimensions6D; metadata: Record<string, unknown> } {
+  try {
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      textNodeName: '#text',
+    });
+    const result = parser.parse(xmlContent);
+    const score = (result['score-partwise'] || result) as Record<string, unknown>;
+
+    const allText = JSON.stringify(score);
+
+    // ── 1. Extract part names ──
+    const partList = score['part-list'] as Record<string, unknown> | undefined;
+    const rawScoreParts = partList?.['score-part'];
+    const scoreParts: Record<string, unknown>[] = rawScoreParts
+      ? Array.isArray(rawScoreParts) ? rawScoreParts : [rawScoreParts]
+      : [];
+    const partNames: string[] = scoreParts.map(p => {
+      const name = p['part-name'];
+      if (typeof name === 'string') return name;
+      if (name && typeof name === 'object') return (name as Record<string, unknown>)['#text'] as string || '';
+      return '';
+    }).filter(Boolean);
+
+    // ── 2. Parse measures ──
+    const partsData = score['part'];
+    const partArray: Record<string, unknown>[] = partsData
+      ? Array.isArray(partsData) ? partsData : [partsData]
+      : [];
+
+    const measures: MeasureAnalysis[] = [];
+    const allInstruments = new Set<string>();
+    const allDynamics = new Set<string>();
+    const allSectionWords: string[] = [];
+
+    for (const part of partArray) {
+      for (const measure of extractMeasuresFromPart(part)) {
+        const measureNum = parseInt(String(measure['@_number'] ?? '0'), 10);
+        const dirs = measure['direction'];
+        const directionArray: Record<string, unknown>[] = dirs
+          ? Array.isArray(dirs) ? dirs : [dirs]
+          : [];
+
+        let sectionWord = '';
+        let dynamics = '';
+
+        for (const dir of directionArray) {
+          const dt = dir['direction-type'] as Record<string, unknown> | undefined;
+          if (!dt) continue;
+          const w = extractDirectionWords(dt);
+          if (w) sectionWord = w;
+          const d = extractDynamics(dt);
+          if (d) dynamics = d;
+        }
+
+        // Instrument from notes
+        const notes = measure['note'];
+        const noteArray: Record<string, unknown>[] = notes
+          ? Array.isArray(notes) ? notes : [notes]
+          : [];
+        let instrument = '';
+        for (const note of noteArray) {
+          const instrId = extractInstrumentId(note);
+          if (instrId) {
+            instrument = INSTRUMENT_ID_MAP[instrId] || instrId.replace(/-/g, ' ');
+            allInstruments.add(instrument);
+          }
+        }
+
+        // Parse measure range from section word (e.g., "Introduction (Compases 1-8)")
+        const rangeInfo = parseMeasureRange(sectionWord);
+        if (rangeInfo) {
+          // Expand this single measure into multiple measures based on the range
+          const { sectionName, start, end } = rangeInfo;
+          for (let m = start; m <= end; m++) {
+            allSectionWords.push(sectionName);
+            if (dynamics) allDynamics.add(dynamics);
+            measures.push({ sectionName, dynamics, instrument, measureNumber: m });
+          }
+        } else {
+          // No range found, use as-is
+          if (sectionWord) allSectionWords.push(sectionWord);
+          if (dynamics) allDynamics.add(dynamics);
+          measures.push({ sectionName: sectionWord, dynamics, instrument, measureNumber: measureNum });
+        }
+      }
+    }
+
+    // ── 3. Key / time from first measure ──
+    let keyFifths = 0;
+    let keyMode = 'major';
+    let timeBeats = 4;
+    let timeBeatType = 4;
+
+    for (const part of partArray) {
+      const mArr = extractMeasuresFromPart(part);
+      if (mArr.length > 0) {
+        const attrs = mArr[0]['attributes'] as Record<string, unknown> | undefined;
+        if (attrs) {
+          const key = attrs['key'] as Record<string, unknown> | undefined;
+          if (key) {
+            keyFifths = Number(key['fifths'] ?? 0);
+            keyMode = String(key['mode'] ?? 'major');
+          }
+          const time = attrs['time'] as Record<string, unknown> | undefined;
+          if (time) {
+            timeBeats = Number(time['beats'] ?? 4);
+            timeBeatType = Number(time['beat-type'] ?? 4);
+          }
+        }
+      }
+      break;
+    }
+
+    // ── 4. Build 6D from structured data ──
+
+    // Organology: part names + instrument refs
+    let organology: string[] = [];
+    if (partNames.length > 0) organology.push(...partNames.map(n => normalizeText(n)));
+    if (allInstruments.size > 0) organology.push(...Array.from(allInstruments));
+    organology = [...new Set(organology)];
+
+    // Supplement with keyword matching on full text
+    const kwOrganology = detectPatterns(allText, ORGANOLOGY_PATTERNS);
+    organology = extractUnique([...organology, ...kwOrganology]);
+
+    // Harmony: derived from key + keyword match
+    let harmony: string[] = ['traditional harmony'];
+    if (keyMode === 'minor') harmony.push('modal harmony', 'minor tonality');
+    if (keyFifths !== 0) harmony.push('diatonic');
+    const kwHarmony = detectPatterns(allText, HARMONY_PATTERNS);
+    harmony = extractUnique([...harmony, ...kwHarmony]);
+
+    // Counterpoint: section structure suggests formal counterpoint
+    let counterpoint: string[] = ['homophonic', 'voice leading'];
+    if (allSectionWords.length > 1) {
+      counterpoint.push('sectional form', 'formal structure');
+    }
+    const kwCounterpoint = detectPatterns(allText, COUNTERPOINT_PATTERNS);
+    counterpoint = extractUnique([...counterpoint, ...kwCounterpoint]);
+
+    // Texture: derived from part/instrument count
+    let texture: string[] = ['homophonic'];
+    if (allInstruments.size <= 2) texture.push('solo texture', 'intimate');
+    else if (allInstruments.size <= 5) texture.push('small ensemble');
+    else texture.push('orchestral');
+    if (partNames.length > 0) texture.push('ensemble texture');
+    const kwTexture = detectPatterns(allText, TEXTURE_PATTERNS);
+    texture = extractUnique([...texture, ...kwTexture]);
+
+    // Rhythm: time signature + keyword match
+    let rhythm: string[] = [];
+    if (timeBeats === 4 && timeBeatType === 4) {
+      rhythm.push('straight', 'ballad', '4/4');
+    } else if (timeBeats === 3) {
+      rhythm.push('waltz', '3/4');
+    } else {
+      rhythm.push('straight');
+    }
+    const kwRhythm = detectPatterns(allText, RHYTHM_PATTERNS);
+    rhythm = extractUnique([...rhythm, ...kwRhythm]);
+
+    // Taste: section words → structural features, dynamics arc
+    let taste: string[] = ['personal style', 'hybrid approach'];
+    const sectionNames = allSectionWords.map(s => getSectionWord(s));
+    const dynamisArray = Array.from(allDynamics);
+
+    if (sectionNames.length > 0) {
+      taste.push('formal analysis', 'structural narrative');
+      if (sectionNames.some(n => /introduction/i.test(n))) taste.push('thematic introduction');
+      if (sectionNames.some(n => /exposition/i.test(n))) taste.push('expository development');
+      if (sectionNames.some(n => /development/i.test(n))) taste.push('developmental variation');
+      if (sectionNames.some(n => /climax|climactic/i.test(n))) taste.push('climactic peak');
+      if (sectionNames.some(n => /coda/i.test(n))) taste.push('resolving coda');
+    }
+    if (dynamisArray.length > 1) {
+      taste.push('dynamic narrative arc', 'expressive range');
+    }
+    const kwTaste = detectPatterns(allText, TASTE_PATTERNS);
+    taste = extractUnique([...taste, ...kwTaste]);
+
+    const dimensions: Dimensions6D = {
+      organology: ensureNonEmpty(organology, ['ensemble']),
+      harmony: ensureNonEmpty(harmony, ['traditional harmony']),
+      counterpoint: ensureNonEmpty(counterpoint, ['homophonic']),
+      texture: ensureNonEmpty(texture, ['homophonic']),
+      rhythm: ensureNonEmpty(rhythm, ['straight']),
+      taste: ensureNonEmpty(taste, ['personal style']),
     };
+
+    // ── 5. Metadata ──
+    const metadata: Record<string, unknown> = {
+      format: 'MusicXML',
+      partNames,
+      instrumentCount: allInstruments.size,
+      instruments: Array.from(allInstruments),
+      measures: measures.length,
+      sections: allSectionWords,
+      dynamics: dynamisArray,
+      keySignature: `${keyFifths} ${keyMode}`,
+      timeSignature: `${timeBeats}/${timeBeatType}`,
+      structuralAnalysis: measures.map(m => ({
+        measure: m.measureNumber,
+        section: m.sectionName || undefined,
+        dynamics: m.dynamics || undefined,
+        instrument: m.instrument || undefined,
+      })),
+    };
+
+    return { dimensions, metadata };
   } catch {
-    // Fallback si falla el parsing
-    return getDefaultDimensions();
+    return { dimensions: getDefaultDimensions(), metadata: { format: 'MusicXML' } };
   }
 }
 
@@ -249,8 +492,9 @@ export class MusicFileAnalyzer {
       if (mimeType.includes('xml') || filename.endsWith('.xml') || filename.endsWith('.musicxml') || filename.endsWith('.mxl')) {
         detectedFormat = 'MusicXML';
         const xmlContent = file.toString('utf-8');
-        dimensions = await analyzeMusicXML(xmlContent);
-        metadata.format = 'MusicXML';
+        const parsed = await analyzeMusicXML(xmlContent);
+        dimensions = parsed.dimensions;
+        Object.assign(metadata, parsed.metadata);
         metadata.size = file.length;
       } else if (mimeType.includes('midi') || filename.endsWith('.mid') || filename.endsWith('.midi')) {
         detectedFormat = 'MIDI';

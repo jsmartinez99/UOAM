@@ -485,17 +485,27 @@ export function createArrangerController(
        });
        await repo.save(entity);
 
-       // Indexar en Qdrant
-       if (dependencies.qdrantClient.upsert) {
-         const vector = Object.values(profile.toDimensionSummary());
-         await dependencies.qdrantClient.upsert('arrangements_collection', [{
-           id: profile.id,
-           vector,
-           payload: { name: profile.name }
-         }]);
-       }
+        // Indexar en Qdrant
+        if (dependencies.qdrantClient.upsert) {
+          try {
+            const vector = Object.values(profile.toDimensionSummary());
+            await dependencies.qdrantClient.upsert('arrangements_collection', [{
+              id: profile.id,
+              vector,
+              payload: { name: profile.name }
+            }]);
+          } catch (qdrantError) {
+            logger.warn(`Qdrant indexing failed for upload: ${(qdrantError as Error).message}`);
+          }
+        }
 
-       return res.status(201).json(profile);
+        return res.status(201).json({
+          ...profile,
+          analysis: {
+            dimensions: result.dimensions,
+            metadata: result.metadata
+          }
+        });
      } catch (error: unknown) {
        const err = error as Error;
        return res.status(400).json({ error: err.message });

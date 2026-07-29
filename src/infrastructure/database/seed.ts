@@ -242,6 +242,9 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
   // ── Qdrant indexing ──
   if (qdrant && typeof qdrant.upsert === 'function') {
     const all = await arrangerRepo.find();
+    let successCount = 0;
+    let failCount = 0;
+    
     for (const profile of all) {
       const vec = Object.values(profile.dimensions).map((d: unknown) =>
         Array.isArray(d) ? d.length : 0,
@@ -254,10 +257,19 @@ export async function seedDatabase(qdrant?: QdrantAdapter): Promise<void> {
             payload: { name: profile.name },
           },
         ]);
+        successCount++;
       } catch (e) {
-        logger.warn(`[seed] Qdrant upsert failed for ${profile.name}: ${(e as Error).message}`);
+        failCount++;
+        logger.error(`[seed] Qdrant upsert failed for ${profile.name}: ${(e as Error).message}`);
       }
     }
-    logger.info(`[seed] Indexed ${all.length} profiles into Qdrant`);
+    
+    if (successCount > 0 && failCount === 0) {
+      logger.info(`[seed] Indexed ${successCount} profiles into Qdrant`);
+    } else if (successCount > 0 && failCount > 0) {
+      logger.warn(`[seed] Partially indexed ${successCount}/${all.length} profiles into Qdrant (${failCount} failures)`);
+    } else if (failCount > 0 && successCount === 0) {
+      logger.error(`[seed] Failed to index any profiles into Qdrant (${failCount} failures). Vector search will be unavailable.`);
+    }
   }
 }

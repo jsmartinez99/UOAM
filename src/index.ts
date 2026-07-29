@@ -118,6 +118,23 @@ async function bootstrap(): Promise<void> {
   });
 }
 
+// Global error handler middleware
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error('Unhandled error', err);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception:', error);
+  // Attempt graceful shutdown
+  process.exit(1);
+});
+
 bootstrap().catch((error: unknown) => {
   logger.error('Fatal error during startup', error as Error);
   process.exit(1);

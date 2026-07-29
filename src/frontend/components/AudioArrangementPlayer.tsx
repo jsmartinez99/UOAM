@@ -403,32 +403,44 @@ export default function AudioArrangementPlayer({
             return;
           }
           const p = new Promise<SoundfontInstance>((resolve, reject) => {
+            let resolved = false;
+            const finish = (inst: SoundfontInstance | null, err?: string): void => {
+              if (resolved) return;
+              resolved = true;
+              if (err) {
+                pushLog({ level: 'error', category: 'graph', message: `Soundfont ${patch} falló`, data: { error: err } });
+                reject(new Error(err));
+              } else if (inst) {
+                pushLog({ level: 'info', category: 'graph', message: `Soundfont ${patch} listo` });
+                resolve(inst);
+              } else {
+                pushLog({ level: 'error', category: 'graph', message: `Soundfont ${patch} terminó sin buffers` });
+                reject(new Error('no buffers'));
+              }
+            };
             try {
-              const inst = Soundfont({ instrument: patch, destination: masterBus, volume: -8 });
-              inst.start; inst.stop;
-              const start = Date.now();
-              const waitForLoad = (): void => {
-                if ((inst as any)._buffers && (inst as any)._buffers.size > 0) {
-                  pushLog({
-                    level: 'info',
-                    category: 'graph',
-                    message: `Soundfont ${patch} cargado`,
-                    data: { loadTimeMs: Date.now() - start, buffers: (inst as any)._buffers.size },
-                  });
-                  resolve(inst as unknown as SoundfontInstance);
+              pushLog({ level: 'info', category: 'graph', message: `Cargando soundfont ${patch}...`, data: { url: `https://gleitz.github.io/midi-js-soundfonts/MusyngKite/${patch}-mp3.js` } });
+              const inst = Soundfont({
+                instrument: patch,
+                destination: masterBus,
+                volume: -8,
+                onLoadProgress: (progress: { loaded: number; total: number }) => {
+                  if (progress.loaded === progress.total && progress.total > 0) {
+                    finish(inst as unknown as SoundfontInstance);
+                  }
+                },
+              }) as unknown as SoundfontInstance;
+              setTimeout(() => {
+                const buffers = (inst as any)._buffers;
+                if (buffers && buffers.size > 0) {
+                  pushLog({ level: 'info', category: 'graph', message: `Soundfont ${patch} cargado (timeout fallback)`, data: { buffers: buffers.size } });
+                  finish(inst);
                 } else {
-                  setTimeout(waitForLoad, 50);
+                  finish(null, 'timeout 15s sin buffers');
                 }
-              };
-              waitForLoad();
+              }, 15000);
             } catch (e) {
-              pushLog({
-                level: 'error',
-                category: 'graph',
-                message: `Soundfont ${patch} falló al cargar`,
-                data: { error: String(e) },
-              });
-              reject(e);
+              finish(null, String(e));
             }
           });
           soundfontLoadingRef.current.set(patch, p);
@@ -488,19 +500,30 @@ export default function AudioArrangementPlayer({
         });
 
         if (!inst) {
-          pushLog({ level: 'warn', category: 'graph', message: `Soundfont ${patch} no disponible, saltando notas` });
+          pushLog({ level: 'warn', category: 'graph', message: `Soundfont ${patch} no disponible, uso fallback synth (oscillator)` });
+          events.forEach((event, eIdx) => {
+            const startTime = sectionStart + event.startSec;
+            const stopAt = startTime + event.durationSec;
+            const fallback = playFallbackNote(ctx, masterBus, startTime, stopAt, event);
+            scheduledNotesRef.current.push({ stop: fallback.stop });
+            if (eIdx < 3) {
+              pushLog({
+                level: 'info',
+                category: 'note',
+                message: `note ${eIdx + 1} (fallback synth)`,
+                data: { midi: event.midi, freq: midiToFreq(event.midi).toFixed(2), velocity: event.velocity.toFixed(3) },
+              });
+            }
+          });
         } else {
           events.forEach((event, eIdx) => {
             const startTime = sectionStart + event.startSec;
             const stopAt = startTime + event.durationSec;
             const stopFn = inst.start({ note: event.midi, velocity: event.velocity, time: startTime });
             const wetStopFn = inst.start({ note: event.midi, velocity: event.velocity * 0.6, time: startTime });
-            scheduledNotesRef.current.push({ stop: (t?: number) => { try { stopFn(t); wetStopFn(t); } catch {} } });
-            if (t !== undefined && stopAt < t) {
-              setTimeout(() => { try { stopFn(); wetStopFn(); } catch {} }, (stopAt - ctx.currentTime) * 1000);
-            } else {
-              setTimeout(() => { try { stopFn(); wetStopFn(); } catch {} }, (stopAt - ctx.currentTime) * 1000);
-            }
+            scheduledNotesRef.current.push({
+              stop: (t?: number) => { try { stopFn(t); } catch {} try { wetStopFn(t); } catch {} },
+            });
             if (eIdx < 3) {
               pushLog({
                 level: 'info',
