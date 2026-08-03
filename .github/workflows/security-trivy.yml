@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@4187e74d05793876e9989daffde9c3e66b4acd07
+        uses: github/codeql-action/upload-sarif@f205ea1c3313d32999d8d6a48b4f6530d4437b38
         with:
           sarif_file: trivy-results.sarif
           category: trivy-image
